@@ -9,7 +9,7 @@ import {
   clearUnreadMsgCount,
 } from '@/api/apis';
 import {
-  rongInit, getemojiList, emojiToHtml, sendMessage,
+  initEmoji, getemojiList, emojiToHtml, sendMessage, initCreateMessage,
 } from './js/init';
 import {
   encryption,
@@ -22,7 +22,7 @@ import {
 import question from '@/components/question.vue';
 import expertlist from '@/components/expertlist.vue';
 import meslog from '@/components/meslog.vue';
-
+import COMMON_ENV from '@/config/env';
 
 export default {
   name: 'message',
@@ -84,6 +84,7 @@ export default {
         rateTag: '',
         rateMes: '', // 评价信息
       },
+      meslogList: null,
 
       targetUserName: '', // 当前聊天人姓名
       targetId: '',
@@ -97,18 +98,20 @@ export default {
       questionSuccessMap: {}, // 问题分类
       userInfo: {},
       params: {
-        appkey: 'sfci50a7s3uzi',
+        appkey: '',
         token: '',
         navi: '',
 
       },
       isCanUploadFile: true, // 单文件上传拦截
+      groupId: '', // 群组id
     };
   },
   props: {
   },
   mounted() {
     this.params.token = this.curUserData.imToken;
+    this.params.appkey = COMMON_ENV.appkey;
     this.init(this.params);
   },
   methods: {
@@ -151,32 +154,36 @@ export default {
           item.time = formatDate(new Date(item.lastMsgTime).getTime(),'hh:mm:ss').substr(0,5);
           item.qtype = item['sort'];
           item.type = item.exchange;
-          item.newmes = 0;      
-          this.meslist[item.code] = [];
+          item.newmes = 0;     
+          if(window.vue.meslist[item.code] === undefined){
+            window.vue.meslist[item.code] = [];
+          } 
+          
+          item.historyFlag=false;
         })
         userlist = this.arrSort(spRes.data.data);
         
         /* eslint-enable */
       }
-      this.setmeslist(this.meslist);
+      this.setmeslist(window.vue.meslist);
       this.setuserlist(userlist);
       if (userlist.length > 0) {
-        this.checkUser(userlist[0], 0);
+        this.checkUser(window.vue.userlist[0], 0);
       }
 
 
-      if (params && params.appkey && params.token) {
-        rongInit(params, this.addPromptInfo);
-      } else {
-        throw new Error('appkey 和 token 不能为空');
-      }
-
-      this.showMessage();
+      // this.showMessage();
       let gcpRes = await getCommonPhrasesList({ name: this.userInfo.name });
       if (gcpRes.data.code === '0000') {
         this.getCommonPhrasesListRes = gcpRes.data.data;
       }
-      // this.showMessage();
+
+      if (params && params.appkey && params.token) {
+        this.rongInit(params);
+      } else {
+        throw new Error('appkey 和 token 不能为空');
+      }
+      this.showMessage();
     },
 
     getTimeFn(time, type) {
@@ -202,8 +209,9 @@ export default {
       // 显示那些tag
       return item.rate.indexOf(this.rateParam.rateVal) === -1;
     },
-    showMesLog() {
+    showMesLog(content) {
       // 查看聊天记录
+      this.meslogList = content;
       this.isShowMeslog = true;
       console.log('查看聊天记录');
     },
@@ -235,24 +243,21 @@ export default {
     },
 
     async SearchPageFn() {
-      // 搜索列表
-      let params = {
-        expertAccount: this.userInfo.expertAccount,
-        codeOrAccount: this.searchVal,
-      };
-      let userlist = [];
-      let curindex = 0;
+      clearTimeout(window.SearchPageFnTimer);
+      window.SearchPageFnTimer = setTimeout(() => new Promise(async (resolve) => {
+        // 搜索列表
+        let params = {
+          expertAccount: this.userInfo.expertAccount,
+          codeOrAccount: this.searchVal,
+        };
+        let curindex = 0;
 
-      let spRes = await SearchPage(params);
-      if (spRes.data.code === '0000') {
-        /*eslint-disable*/ 
+        let spRes = await SearchPage(params);
+        if (spRes.data.code === '0000') {
+          /*eslint-disable*/ 
 
         spRes.data.data.forEach((item,index)=>{
-          if(this.curid === item.id){
-            // 如果存在curid
-            curindex = index;
-            this.curMessageIndex = index;
-          }
+          
           item.userId = item.accountId;
           item.icon = item.headImg;
           item.name = item.account;
@@ -260,26 +265,34 @@ export default {
           item.time = formatDate(new Date(item.lastMsgTime).getTime(),'hh:mm:ss').substr(0,5);
           item.qtype = item['sort'];
           item.type = item.exchange;
-          item.newmes = 0;   
-          if(!this.meslist[item.code]){
-            this.meslist[item.code] = [];
+          item.newmes = 0; 
+          item.historyFlag = false;  
+          if(window.vue.meslist[item.code] === undefined){
+            window.vue.meslist[item.code] = [];
           }   
         })
-        userlist = this.arrSort(spRes.data.data);
         
+        let arr = this.arrSort(spRes.data.data);
+        arr.forEach((item,index)=>{
+          if(window.curid === item.id){
+            // 如果存在curid
+            curindex = index;
+          }
+        })
+        this.setuserlist(arr);
         /* eslint-enable */
-      } else {
-        userlist = [];
-      }
-      if (userlist.length > 0) {
-        this.checkUser(userlist[curindex], curindex);
-      }
-      this.setuserlist(userlist);
-      this.setmeslist(this.meslist);
-      this.$forceUpdate();
-      return new Promise((resolve) => {
-        resolve();
-      });
+        } else {
+          this.setuserlist([]);
+        }
+
+        this.setmeslist(window.vue.meslist);
+        if (window.vue.userlist.length > 0) {
+          this.checkUser(window.vue.userlist[curindex], curindex);
+        }
+        this.$forceUpdate();
+
+        resolve(spRes);
+      }), 500);
     },
     arrSort(userlist) {
       // 排序 优先在线的置顶
@@ -317,7 +330,7 @@ export default {
     showQuestionFn() {
       // 问题分类
       /*eslint-disable*/ 
-      if (this.userlist[this.curMessageIndex].qtype == 1) {
+      if (window.vue.userlist[this.curMessageIndex].qtype == 1) {
         this.$toast('用户问题已分类');
       } else {
         this.isShowQuestion = true;
@@ -341,7 +354,7 @@ export default {
       });
     },
     // 用户列表相关
-    checkUser(item, index, type) {
+    checkUser(item, index) {
       if (!this.isCanChangeUser) return;
       /*eslint-disable*/ 
       // 清除未读消息标志
@@ -356,6 +369,7 @@ export default {
       this.curMessageIndex = index;
       this.curmesid = item.mesid;
       this.curid = item.id || item.curid;
+      window.curid = this.curid;
       this.closeCofirmBox = false;
       this.messageData.content.extra.mesid = item.id;
       this.messageData.content.extra.code = item.mesid;
@@ -364,18 +378,18 @@ export default {
       if (item.fromExpertId) {
         // 设置群组信息  如果群组存在  且 转单专家id存在
         this.targetIdList = [item.userId, item.fromExpertId];
-        item.groupId = item.code;
+        this.groupId = item.code;
+      }else{
+        this.groupId = '';
       }
        
 
       // 切换没聊天信息  获取聊天记录
-      if (!item.historyFlag && type !== 'init') {
+      if (!item.historyFlag) {
         // 如果获取过聊天记录 就不在获取了
         item.historyFlag = true;
         // 防止请求在消息之前返回
-        setTimeout(()=>{
-          this.getHistoryMessageListFn(item.mesid);
-        },1000)
+        this.getHistoryMessageListFn(item.mesid);
       }
       /* eslint-enable */
     },
@@ -436,6 +450,7 @@ export default {
     },
     async startSendMes(type, mes) {
       // 1发送文本消息 2发送快捷消息
+      this.mesData = this.mesData.replace(/\n/g, '').replace(/\r\n/g, '').replace(/↵/g, '');
       if (!this.mesData && type === 1) {
         this.$message({ message: '请输入聊天内容', type: 'warning' });
         return;
@@ -449,14 +464,14 @@ export default {
 
 
     checkMesForSystem() {
-      if (this.meslist[this.curmesid]
-        && this.meslist[this.curmesid].length < 1) {
+      if (window.vue.meslist[this.curmesid]
+        && window.vue.meslist[this.curmesid].length < 1) {
         // 没有聊天数据
         return true;
       }
 
       let min = 5 * 60 * 1000; // 发送系统时间  时间间隔 分钟
-      let arr = this.meslist[this.curmesid];
+      let arr = window.vue.meslist[this.curmesid];
       let sentTime = arr[arr.length - 1].sentTime || parseInt(arr[arr.length - 1].msgTimestamp, 10);
       let lastTime = sentTime + min;
       let curTime = new Date().getTime();
@@ -490,7 +505,7 @@ export default {
 
         return sendMessage(this.targetIdList,
           sysObj, false,
-          this.userlist[this.curMessageIndex].groupId);
+          this.groupId);
       }
       return new Promise((resolve) => {
         resolve({ code: '404' });
@@ -522,7 +537,7 @@ export default {
 
       this.messageData.content.messageName = messageName;
       let res = await sendMessage(this.targetIdList, this.messageData,
-        isCreate, this.userlist[this.curMessageIndex].groupId);
+        isCreate, this.groupId);
       this.sendMesResult(res);
       return res;
     },
@@ -556,14 +571,14 @@ export default {
         // 是系统消息  结束咨询
         status=2;
       }
-      if (this.meslist[code] === undefined && code) {
+      if (window.vue.meslist[code] === undefined && code) {
         // 如果不存在用户  新增用户
 
         return this.SearchPageFn();
         
       } else if (code) {
         // 已有数据  更改状态
-        this.userlist.forEach((item, index) => {
+        window.vue.userlist.forEach((item, index) => {
           if (item.code === code) {
             if(this.curmesid !== code){
               item.newmes = 1;
@@ -574,20 +589,20 @@ export default {
             }
           }
         });
-        this.setuserlist(this.userlist);
+        this.setuserlist(window.vue.userlist);
       }
       return new Promise((resolve)=>{resolve({code:'0001'})});
       /* eslint-enable */
     },
 
-    async pushList(data, type) {
+    getCodeById(data) {
       let tid = '';
       /*eslint-disable*/ 
       if (data.content.extra && data.content.extra.code) {
         tid = data.content.extra.code;
       } else if (data.content.extra && data.content.extra.mesid) {
         // 如果没有code 根据mesid 来匹配
-        this.userlist.forEach((item) => {
+        window.vue.userlist.forEach((item) => {
           if (data.content.extra.mesid === item.id) {
             // 找到id相等的 设置code
             tid = item.code;
@@ -596,11 +611,11 @@ export default {
         });
       }
       /* eslint-enable */
-      if (!tid) {
-        // 如果没有code  没找到id
-        console.log('消息来源有错，不接收信息');
-        return;
-      }
+      return tid;
+    },
+
+    async pushList(data, type) {
+      let tid = this.getCodeById(data);
       let res = await this.setUserListByCode(data);
 
       console.log(res);
@@ -608,15 +623,17 @@ export default {
         this.fileUpLoadSuc(data);
       } else {
       // this.meslist[tid].newmes = 1;
-        if (!this.meslist[tid]) {
-          this.meslist[tid] = [];
+        console.log(window.vue.meslist);
+        if (window.vue.meslist[tid] === undefined) {
+          window.vue.meslist[tid] = [];
         }
-        let l = this.meslist[tid].length;
-        this.meslist[tid].push({
+        let l = window.vue.meslist[tid].length;
+        window.vue.meslist[tid].push({
           id: l,
           ...data,
         });
-        this.setmeslist(this.meslist);
+
+        this.setmeslist(window.vue.meslist);
         this.$forceUpdate();
       }
     },
@@ -650,7 +667,64 @@ export default {
     addPromptInfo(res) {
       if (res.code === '9999') {
         // 收到消息
-        console.log('收到消息', res);
+        console.log('收到消息=========', res);
+        let timeItem = res.data;
+        let lasttime = timeItem.sentTime || parseInt(timeItem.msgTimestamp, 10) || 0;
+        if (lasttime < this.curtime) {
+          console.log('收到留言消息，不处理', res);
+          return;
+        }
+
+        let code = this.getCodeById(res.data);
+        if (!code) {
+          console.log('消息来源有错，不接收信息');
+          return;
+        }
+
+        // 根据code  获取当前咨询单是否获取过聊天记录
+        let hisFlag = true;
+        window.vue.userlist.forEach((item) => {
+          if (item.code === code) {
+            console.log(item.code, item.historyFlag);
+            hisFlag = item.historyFlag;
+            /*eslint-disable*/ 
+            if (this.curmesid !== code) {
+              item.newmes = 1;
+            }
+
+            item.online = 0;
+            /* eslint-enable */
+          }
+        });
+        // 刷新新消息提醒
+        this.setuserlist(window.vue.userlist);
+        if (!hisFlag) {
+          console.log('没有获取过聊天记录，切换会重新拉取最新聊天记录');
+          return;
+        }
+        // 有聊天记录 判断当前时间 与聊天记录时间是否一致
+        // 判断当前消息的msgUID  是否存在 存在不做操作 messageUId
+        if (window.vue.meslist[code] && window.vue.meslist[code].length > 0) {
+          let flag = false;
+          let list = window.vue.meslist[code];
+          let curMsgUId = res.data.messageUId || res.data.msgUID;
+          list.forEach((item) => {
+            let listUid = item.messageUId || item.msgUID;
+            if (curMsgUId && listUid && curMsgUId === listUid) {
+              // 存在id
+              flag = true;
+            }
+          });
+          if (flag) {
+            console.log('已存在该消息记录，不做处理');
+            return;
+          }
+        }
+
+
+        console.log('收到正常消息', res);
+
+
         if (res.data.messageType === 'GroupNotificationMessage') {
           this.SearchPageFn();
         } else {
@@ -675,21 +749,22 @@ export default {
     },
 
     async getHistoryMessageListFn(tid) {
-      let meslist = JSON.parse(JSON.stringify(this.meslist));
+      // let meslist = JSON.parse(JSON.stringify(this.meslist));
       let res = await getIMById({ id: this.curid });
       let curmesid = tid || this.curmesid;
       /* eslint-disable */
-      if(!meslist[curmesid]){
-        meslist[curmesid]=[];
+      if(window.vue.meslist[curmesid] === undefined){
+        window.vue.meslist[curmesid]=[];
       }
       if(res.data.code === '0000'){
-        console.log("是否重置聊天记录",res.data.data.msgList.length>meslist[curmesid].length)
-        if(res.data.data.msgList.length!==meslist[curmesid].length){
-          meslist[curmesid] = res.data.data.msgList;
+        console.log("是否重置聊天记录",res.data.data.msgList.length>window.vue.meslist[curmesid].length)
+        if(res.data.data.msgList.length!==window.vue.meslist[curmesid].length){
+          
+          window.vue.meslist[curmesid] = res.data.data.msgList;
         }
-        this.setmeslist(meslist);
-        console.log(this.meslist,window.vue.meslist)
-        this.$forceUpdate();
+        this.setmeslist(window.vue.meslist);
+        
+        // this.$forceUpdate();
         this.$nextTick(() => {
           this.scrollEnd();
         });
@@ -713,7 +788,7 @@ export default {
     },
 
     fileUpLoadSuc(data, type) {
-      let list = this.meslist[this.curmesid].slice();
+      let list = window.vue.meslist[this.curmesid].slice();
       let i = -1;
       list.forEach((item, index) => {
         if (item.id === this.curUploadFileId) {
@@ -731,9 +806,9 @@ export default {
           // 上传成功 修改消息状态
           list[i] = data;
         }
-        this.meslist[this.curmesid] = list;
-        this.setmeslist(this.meslist);
-        this.$forceUpdate();
+        window.vue.meslist[this.curmesid] = list;
+        this.setmeslist(window.vue.meslist);
+        // this.$forceUpdate();
       }
       this.isCanUploadFile = true;
       this.isCanChangeUser = true;
@@ -749,7 +824,7 @@ export default {
         this.sendMesResult(res);
       }
 
-      this.curUploadFileId = this.meslist[this.curmesid].length;
+      this.curUploadFileId = window.vue.meslist[this.curmesid].length;
       let obj = {
         content: {
           messageName: 'ImageMessage',
@@ -792,7 +867,7 @@ export default {
     async uploadFile(file) {
       this.isCanChangeUser = false;
       this.isCanUploadFile = false;
-      this.curUploadFileId = this.meslist[this.curmesid].length;
+      this.curUploadFileId = window.vue.meslist[this.curmesid].length;
       let res = await this.sendSystemMessage();
       if (res.code === '0000') {
         this.sendMesResult(res);
@@ -946,6 +1021,97 @@ export default {
         return time.split(' ')[1];
       }
       return time;
+    },
+
+    rongInit(params) {
+      // 容联初始化
+      let oThis = this;
+      let { RongIMLib } = window;
+      let { Protobuf } = window;
+      let { RongIMClient } = window.RongIMLib;
+      let { appkey } = params;
+      let { token } = params;
+      let { navi } = params;
+      let config = {
+        protobuf: Protobuf,
+      };
+      if (navi) {
+        config.navi = navi;
+      }
+      // 初始化emoji
+      initEmoji();
+
+
+      RongIMClient.init(appkey, null, config);
+      RongIMClient.setConnectionStatusListener({
+        onChanged(status) {
+          oThis.addPromptInfo({ code: status, message: '' });
+          switch (status) {
+            case RongIMLib.ConnectionStatus.CONNECTED:
+            case 0:
+              console.log('连接成功');
+
+              break;
+
+            case RongIMLib.ConnectionStatus.CONNECTING:
+            case 1:
+              console.log('连接中');
+              oThis.addPromptInfo({ code: status, message: '连接中' });
+              break;
+
+            case RongIMLib.ConnectionStatus.DISCONNECTED:
+            case 2:
+              console.log('当前用户主动断开链接');
+              oThis.addPromptInfo({ code: '-9999', message: '当前用户主动断开链接' });
+              break;
+
+            case RongIMLib.ConnectionStatus.NETWORK_UNAVAILABLE:
+            case 3:
+              oThis.addPromptInfo({ code: '1001', message: '网络不可用' });
+              break;
+
+            case RongIMLib.ConnectionStatus.CONNECTION_CLOSED:
+            case 4:
+              oThis.addPromptInfo({ code: '-9999', message: '未知原因，连接关闭' });
+              break;
+
+            case RongIMLib.ConnectionStatus.KICKED_OFFLINE_BY_OTHER_CLIENT:
+            case 6:
+              oThis.addPromptInfo({ code: '1002', message: '用户账户在其他设备登录，本机会被踢掉线' });
+              break;
+
+            case RongIMLib.ConnectionStatus.DOMAIN_INCORRECT:
+            case 12:
+              oThis.addPromptInfo({ code: '1002', message: '当前运行域名错误，请检查安全域名配置' });
+              break;
+            default:
+              oThis.addPromptInfo({ code: '404', message: '服务器返回错误' });
+          }
+        },
+      });
+
+      // 创建自定义事件
+      initCreateMessage('OptionsMessage', ['type', 'data', 'user', 'extra']);
+      initCreateMessage('dxhyMessage', ['title', 'user', 'content', 'contentType', 'extra'], true, true, 'RC:DxhyMsg');
+
+      RongIMClient.setOnReceiveMessageListener({
+        // 接收到的消息
+        onReceived(message) {
+          console.log('接收消息');
+          oThis.addPromptInfo({ code: '9999', data: message });
+        },
+      });
+      RongIMClient.connect(token, {
+        onSuccess(userId) {
+          oThis.addPromptInfo({ code: '0000', data: userId });
+        },
+        onTokenIncorrect() {
+          oThis.addPromptInfo({ code: '0002', data: 'token无效' });
+        },
+        onError(errorCode) {
+          oThis.addPromptInfo(errorCode);
+        },
+      }, null);
     },
 
 

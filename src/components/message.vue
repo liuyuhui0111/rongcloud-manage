@@ -32,17 +32,20 @@
       {on:curMessageIndex==index},
       {stop:item.type==1},
       {newmes:item.newmes==1},
-      {group:item.exchange == 1},
+      {group:item.exchange == 1 && item.toExpertId != curUserData.id},
+      {gray1:item.online==1 || item.status==2}
       ]"
       :key="index">
         <div class="imgbox">
         <span class="qtype" v-if="item.qtype == '0' && item.status==2">问题未分类</span>
         <div :class="{gray:item.online==1 || item.status==2}">
           <img :src="item.icon" alt="">
-          <img v-if="item.exchange == 1"
+          <img v-if="item.exchange == 1
+          && item.toExpertId != curUserData.id"
           :src="item.fromIcon"
           alt="" class="expertfrom">
-          <img v-if="item.exchange == 1"
+          <img v-if="item.exchange == 1
+          && item.toExpertId != curUserData.id"
           :src="item.toIcon"
           alt="" class="expertto">
         </div>
@@ -92,7 +95,10 @@
               </p>
               <p v-if="curTargetUserData.userType == 'C'">
               所属行业：{{curTargetUserData.companyTrade}}</p>
-              <p>所属地区：{{curTargetUserData.userCity}}</p>
+              <p v-if="curTargetUserData.userType == 'P'">
+              所属地区：{{curTargetUserData.userCity}}</p>
+              <p v-if="curTargetUserData.userType == 'C'">
+              所属地区：{{curTargetUserData.companyLocation}}</p>
             </div>
           <div slot="reference" class="title">
 
@@ -136,6 +142,7 @@
         :ref="index">
           <div v-if="item.content.extra
           && item.objectName != 'RC:InfoNtf'
+          && item.objectName !=='RC:GrpNtf'
           && item.objectName != 'RC:DxhyMsg'" class="user">
             <img :src="item.content.extra.icon" alt="">
           </div>
@@ -158,11 +165,11 @@
                 <span @click="showEvaluateFn(item)" class="btn-sub">查看评价</span>
               </div>
               <!-- eslint-disable -->
-              <div class="mes meslog" @click="showMesLog" 
+              <div class="mes meslog" @click="showMesLog(item.content)" 
               v-if="item.content.contentType =='MSG_LOG'">
                <div class="logtitle"> {{item.content.title}}</div>
                 <p class="ellipsis"
-                v-for="(contentItem,contentIndex) in item.content.content.slice(0,3)"
+                v-for="(contentItem,contentIndex) in item.content.content.slice(1,4)"
                 :key="contentIndex">
                 {{contentItem.content.extra.name}} : {{contentItem.content.content}}
                 </p>
@@ -394,7 +401,9 @@
 
     <!-- 聊天记录 -->
     <template v-if="isShowMeslog">
-      <meslog @back="isShowMeslog=false;" :mesid="curid"></meslog>
+      <meslog @back="isShowMeslog=false;"
+      :mesid="curid"
+      :meslogList = "meslogList"></meslog>
     </template>
 
     <!-- 转单专家列表弹窗 -->
@@ -691,7 +700,9 @@ text-align: center;
     padding: 10px;
     cursor: pointer;
   }
-
+  .userlistbox .userlist .item.gray1{
+    background: rgba(197,197,197,1);
+  }
   .userlistbox .userlist .item.on{
     background: #EDEDED;
   }
@@ -1265,6 +1276,7 @@ display: none;
   border-radius: 4px;
   word-break: break-all;
   position: relative;
+  min-height: 22px;
 }
 .messagebox .meslist .item .meslog p{
   font-size: 13px;

@@ -1,6 +1,6 @@
 // 消息类型页面 https://www.rongcloud.cn/docs/message_architecture.html#message_content
 
-function initEmoji() {
+export function initEmoji() {
   let { RongIMLib } = window;
   // 直接初始化
   RongIMLib.RongIMEmoji.init();
@@ -67,6 +67,7 @@ export function sendMessage(targetIdList, messageData, isCreate, groupId) {
   // 发送消息  参数 目标列表 消息对象 content messageName 必须传
   // isCreate 是否自定义消息 isGroup  是否是群组
   // messageData：{content:{messageName:''}}
+  console.log('发送消息::::::::::', targetIdList, messageData, isCreate, groupId);
   return new Promise((resolve, reject) => {
     if (targetIdList.length < 1 || !messageData) {
     // 没有传发送对象  和消息内容

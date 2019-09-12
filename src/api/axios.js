@@ -27,6 +27,7 @@ axios.interceptors.request.use(
         //   config.url = BASE_URL + config.url;
         // }
         config.headers.Authorization = store.getters.token ? store.getters.token : '-1';
+        config.headers.userId = store.getters.curUserData.id ? store.getters.curUserData.id : '-1';
         // config.headers.Authorization = '20190821111718664aac1cdf2e60146d6a0b06aa0b49ace4c';
         config.headers.httpHost = window.location.href || '';
 
@@ -91,18 +92,16 @@ axios.interceptors.response.use(
                 COMMON_LOADING.close();
                 COMMON_LOADING = null;
               }
-
             }
             // console.log('token::::::::',store.getters.token,'code::::::::',response.data.code)
-            // if(response.data.code === '1058' && store.getters.token){
+            if(response.data.code === '1058' && store.getters.token){
               // 登录过期
-              // Vue.prototype.$$message.closeAll();
-              // Vue.prototype.$$message({
-              //   message: '登录状态过期，请重新登录',
-              //   type: 'warning'
-              // });
-              // window.vue.routerGo({path:'/'})
-            // }
+              window.vue.$message({
+                message: '登录信息已过期，请重新登录',
+                type: 'warning'
+              });
+              window.vue.routerGo({path:'/'})
+            }
             return response;
     },
     (error) => {

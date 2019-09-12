@@ -73,14 +73,37 @@ export default {
       type: String,
       default: () => '',
     },
+    meslogList: {
+      type: Object,
+      default: () => null,
+    },
   },
   mounted() {
     this.init();
   },
   methods: {
     async init() {
-      let res = await getIMById({ id: this.mesid });
       /* eslint-disable */
+      
+      if(this.meslogList && this.meslogList.content.length>0){
+         let arr = [];
+        // 过滤聊天记录  不展示系统自定义消息;
+        this.meslogList.content.forEach((item)=>{
+          if(item.objectName !== 'RC:DxhyMsg' 
+            && item.objectName !=='RC:GrpNtf'
+            && item.targetId 
+            && item.fromUserId){
+            arr.push(item);
+          }
+        })
+        this.list = arr;
+        this.title = this.meslogList.title;
+        this.isShowPage = true;
+        return;
+      }
+      let params = { id: this.mesid }
+      let res = await getIMById(params);
+      
       this.isShowPage = true;
       if(res.data.code === '0000'){
         let arr = [];

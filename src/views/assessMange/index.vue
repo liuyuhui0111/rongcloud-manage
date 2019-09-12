@@ -92,7 +92,7 @@ export default {
       tableOptions: [
         {
           label: '咨询单ID',
-          prop: 'id',
+          prop: 'code',
         },
         {
           label: '提问者',
@@ -127,8 +127,9 @@ export default {
       /* eslint-disable */
       if(res.data.code === '0000'){
         this.tableData = res.data.data.list.map((item) => {
-          item.evaluateFlag = this.rateTagMap[item.evaluateFlag*1-1].text;
-          item.evaluateContent = this.rateMap[item.evaluateContent];
+          item.evaluateFlag = this.dealFlag(item.evaluateFlag);
+          // item.evaluateContent = this.dealContent(item.evaluateContent);
+          item.account = item.account.slice(0 , 3) + "****" + item.account.slice(-4);
           return item;
         });
         this.total = res.data.data.total;
@@ -151,6 +152,26 @@ export default {
     currentChange(val) {
       this.currentPage = val;
       this.init();
+    },
+    dealFlag(val) {
+      if (!val) return '/';
+      let str = '';
+      if (val.length === 1) {
+        str = this.rateTagMap[val * 1 - 1].text;
+      } else {
+        let tempArr = val.split(',');
+        console.log(tempArr);
+        tempArr.map((item) => {
+          str += `${this.rateTagMap[item * 1 - 1].text}、`;
+          return item;
+        });
+        str = str.slice(0, str.length - 1);
+      }
+      return str;
+    },
+    dealContent(val) {
+      if (!val) return '/';
+      return this.rateMap[val];
     },
     filterStar(val) {
       let target = '';

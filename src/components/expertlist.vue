@@ -25,7 +25,8 @@
           <div class="intro">
             <div class="name">
               <h1>{{item.name}}</h1>
-              <p>评分:<span class="score">{{item.score}}.0</span>
+              <p>评分:<span class="score">{{item.score ?
+              parseFloat(item.score).toFixed(2) : '0.00'}}</span>
               &nbsp;| 回答:
               <span class="score">{{item.answerNum}}次</span>
               </p>

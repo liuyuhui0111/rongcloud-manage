@@ -184,6 +184,7 @@ export default {
         /* eslint-disable */ 
         this.askingDataAll = res.data.data.list.map((item) => {
           item.beginTime = date(item.beginTime, 'yyyy-MM-dd hh:mm:ss');
+          item.account = item.account.slice(0 , 3) + "****" + item.account.slice(-4);
           return item;
         });
         /* eslint-enable */
@@ -217,6 +218,7 @@ export default {
         /* eslint-disable */ 
         this.completeDataAll = res.data.data.list.map((item) => {
           item.beginTime = date(item.beginTime, 'yyyy-MM-dd hh:mm:ss');
+          item.account = item.account.slice(0 , 3) + "****" + item.account.slice(-4);
           return item;
         });
         /* eslint-enable */

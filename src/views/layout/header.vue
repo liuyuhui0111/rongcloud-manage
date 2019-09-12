@@ -1,6 +1,12 @@
 <template>
   <div class="common-layout-header">
-    <div class="logo"><img src="@/assets/icon/logo.png" alt=""><span>专家端</span></div>
+    <div class="logo">
+      <div class="logo-box">
+        <img src="@/assets/icon/logo_img.png" class="logo-img">
+        <img src="@/assets/icon/logo_text.png" class="logo-text">
+      </div>
+      <span>专家端</span>
+    </div>
     <div class="user-info">
       <el-popover
         placement="bottom"
@@ -29,9 +35,17 @@
     padding: 18px 24px;
   }
   .logo {
+    white-space: nowrap;
+    .logo-box {
+      display: inline-block;
+    }
     img {
       height: 34px;
+      display: inline-block;
       vertical-align: top;
+    }
+    .logo-img {
+      width: 34px;
     }
     span {
       display: inline-block;

@@ -58,7 +58,7 @@ export default {
     this.getUnreadMsgCount();
     setInterval(() => {
       this.getUnreadMsgCount();
-    }, 30 * 1000);
+    }, 5 * 1000);
   },
   methods: {
     // 获取未读消息
