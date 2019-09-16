@@ -120,10 +120,10 @@ export function getExpertInfoList(params) {
   const url = '/expert/getExpertInfoList';
   return axios.get(BASE_URL + url, { params } || {});
 }
-export function SearchPage(params) {
+export function SearchPage(params, opt) {
   // 搜索页
   const url = '/expert/searchPage';
-  return axios.post(BASE_URL + url, params || {});
+  return axios.post(BASE_URL + url, params || {}, opt);
 }
 export function proposeEndConsult(params) {
   // 专家提出是否结束咨询

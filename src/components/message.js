@@ -134,7 +134,7 @@ export default {
         };
       }
       let userlist = [];
-      let spRes = await SearchPage({ expertAccount: this.userInfo.expertAccount, codeOrAccount: '' });
+      let spRes = await SearchPage({ expertAccount: this.userInfo.expertAccount, codeOrAccount: '' }, { isHideLoading: false });
       if (spRes.data.code === '0000') {
         /*eslint-disable*/ 
         // userId: 'l849643081@163.com', // 用户id
@@ -168,22 +168,23 @@ export default {
       this.setmeslist(window.vue.meslist);
       this.setuserlist(userlist);
       if (userlist.length > 0) {
-        this.checkUser(window.vue.userlist[0], 0);
-      }
+        this.checkUser(window.vue.userlist[0], 0, async () => {
+          let gcpRes = await getCommonPhrasesList({ name: this.userInfo.name });
+          if (gcpRes.data.code === '0000') {
+            this.getCommonPhrasesListRes = gcpRes.data.data;
+          }
+
+          // this.showMessage();
 
 
-      // this.showMessage();
-      let gcpRes = await getCommonPhrasesList({ name: this.userInfo.name });
-      if (gcpRes.data.code === '0000') {
-        this.getCommonPhrasesListRes = gcpRes.data.data;
+          if (params && params.appkey && params.token) {
+            this.rongInit(params);
+          } else {
+            throw new Error('appkey 和 token 不能为空');
+          }
+          this.showMessage();
+        });
       }
-
-      if (params && params.appkey && params.token) {
-        this.rongInit(params);
-      } else {
-        throw new Error('appkey 和 token 不能为空');
-      }
-      this.showMessage();
     },
 
     getTimeFn(time, type) {
@@ -239,10 +240,15 @@ export default {
       // this.userlist[this.curMessageIndex].type = '1';
       // this.setuserlist(this.userlist);
       this.$toast(`已转单给${item.name}`);
-      this.SearchPageFn();
+      this.SearchPageFn(0, { isHideLoading: true });
     },
 
-    async SearchPageFn() {
+    async SearchPageFn(time, opt) {
+      let t = time || 500;
+      let options = {};
+      if (!opt) {
+        options = { isHideLoading: true };
+      }
       clearTimeout(window.SearchPageFnTimer);
       window.SearchPageFnTimer = setTimeout(() => new Promise(async (resolve) => {
         // 搜索列表
@@ -252,7 +258,7 @@ export default {
         };
         let curindex = 0;
 
-        let spRes = await SearchPage(params);
+        let spRes = await SearchPage(params, options);
         if (spRes.data.code === '0000') {
           /*eslint-disable*/ 
 
@@ -292,7 +298,7 @@ export default {
         this.$forceUpdate();
 
         resolve(spRes);
-      }), 500);
+      }), t);
     },
     arrSort(userlist) {
       // 排序 优先在线的置顶
@@ -311,9 +317,11 @@ export default {
       return userlist;
     },
 
-    questionSuccess() {
+    async questionSuccess() {
       // 问题分类成功
-      this.SearchPageFn();
+      // await this.SearchPageFn(0);
+      this.userlist[this.curMessageIndex].qtype = 1;
+      this.setuserlist(this.userlist);
       this.isShowQuestion = false;
     },
 
@@ -354,7 +362,7 @@ export default {
       });
     },
     // 用户列表相关
-    checkUser(item, index) {
+    checkUser(item, index, fn) {
       if (!this.isCanChangeUser) return;
       /*eslint-disable*/ 
       // 清除未读消息标志
@@ -389,7 +397,7 @@ export default {
         // 如果获取过聊天记录 就不在获取了
         item.historyFlag = true;
         // 防止请求在消息之前返回
-        this.getHistoryMessageListFn(item.mesid);
+        this.getHistoryMessageListFn(item.mesid,fn);
       }
       /* eslint-enable */
     },
@@ -635,6 +643,9 @@ export default {
 
         this.setmeslist(window.vue.meslist);
         this.$forceUpdate();
+        this.$nextTick(() => {
+          this.scrollEnd();
+        });
       }
     },
     emojiToHtml(mes) {
@@ -657,7 +668,7 @@ export default {
 
       this.$nextTick(() => {
         // 滚动到底部
-        let ele = document.getElementById(`meslist${this.curMessageIndex}`);
+        let ele = document.querySelectorAll('.meslist')[this.curMessageIndex];
         if (!ele) {
           return;
         }
@@ -748,7 +759,7 @@ export default {
       }
     },
 
-    async getHistoryMessageListFn(tid) {
+    async getHistoryMessageListFn(tid, fn) {
       // let meslist = JSON.parse(JSON.stringify(this.meslist));
       let res = await getIMById({ id: this.curid });
       let curmesid = tid || this.curmesid;
@@ -757,17 +768,30 @@ export default {
         window.vue.meslist[curmesid]=[];
       }
       if(res.data.code === '0000'){
-        console.log("是否重置聊天记录",res.data.data.msgList.length>window.vue.meslist[curmesid].length)
+       
         if(res.data.data.msgList.length!==window.vue.meslist[curmesid].length){
-          
           window.vue.meslist[curmesid] = res.data.data.msgList;
         }
+
         this.setmeslist(window.vue.meslist);
         
         // this.$forceUpdate();
         this.$nextTick(() => {
           this.scrollEnd();
         });
+      }
+      if(window.vue.meslist[curmesid].length>0){
+
+        if(fn){
+          console.log("聊天记录拉取成功====且是初始化进入")
+          fn();
+        }
+      }else{
+        // 获取聊天记录失败 轮询获取
+        setTimeout(()=>{
+          this.getHistoryMessageListFn(curmesid,fn);
+        },500)
+        
       }
       
     },

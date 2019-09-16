@@ -18,8 +18,10 @@
       </el-popover>
       <div @keyup.enter="SearchPageFn" class="inpbox">
         <span @click="SearchPageFn" class="iconfont iconsousuo"></span>
+        <div class="inp">
         <el-input v-model="searchVal"
         placeholder=""></el-input>
+        </div>
       </div>
 
     </div>
@@ -27,13 +29,14 @@
       <div v-for="(item,index) in userlist"
       @click="checkUser(item,index)"
       :data="item.newmes"
-      class="item"
+      class="item userlistItem"
       :class="[
       {on:curMessageIndex==index},
       {stop:item.type==1},
       {newmes:item.newmes==1},
       {group:item.exchange == 1 && item.toExpertId != curUserData.id},
-      {gray1:item.online==1 || item.status==2}
+      {gray1:item.online==1 || item.status==2},
+
       ]"
       :key="index">
         <div class="imgbox">
@@ -126,7 +129,7 @@
         </div>
       </div>
       <!-- 聊天展示区域 -->
-      <div :id="'meslist'+uindex"
+      <div
       class="meslist common-scroll-bar">
 
         <div
@@ -534,6 +537,7 @@ color: #333;
 border: none;
 outline: none;
 height: 28px;
+line-height: 28px;
 padding: 0 0 0 0px;
   }
 
@@ -664,6 +668,8 @@ text-align: center;
     color: #0898ad;
     cursor: pointer;
     font-size: 16px;
+    position: relative;
+    top: 2px\9\0;
   }
   .userlistbox .iconzixunzhong{
     color: #09bb0c;
@@ -677,6 +683,16 @@ text-align: center;
     align-items: center;
     justify-content: space-between;
     padding-left: 10px;
+    font-size: 0px;
+    line-height: 28px;
+  }
+  .userlistbox .search-box .inpbox .inp{
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: -o-flex;
+    display: flex;
+    align-items: center;
   }
 
   .userlistbox .userlist{

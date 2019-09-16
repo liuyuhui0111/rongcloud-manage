@@ -10,6 +10,7 @@ const getters = {
       return {};
     }
   },
+  
   curTargetUserData: state => state.curTargetUserData,
   curChangeUserData: state => state.curChangeUserData,
   meslist: state => state.meslist,
@@ -23,7 +24,7 @@ const getters = {
   curTargetId: (state) => {
     return state.curTargetId ? state.curTargetId : window.sessionStorage.getItem('curTargetId');
   },
-  // getDemoTitle: state => state.demo.title,
+  vuexShowMessage: state => state.vuexShowMessage,
 };
 
 export default getters;

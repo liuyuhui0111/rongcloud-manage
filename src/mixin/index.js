@@ -71,6 +71,7 @@ export default {
           'curChangeUserData', // 转单专家用户信息
           'meslist',
           'userlist',
+          'vuexShowMessage', // 是否展示聊天窗口
         ]),
       },
       methods: {
@@ -169,6 +170,7 @@ export default {
           'setcurChangeUserData', // 转单专家用户信息
           'setmeslist', // 聊天列表
           'setuserlist', // 咨询单列表
+          'setvuexShowMessage', // 是否展示聊天窗口
         ]),
       },
 

@@ -227,7 +227,7 @@ margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 20px;
+  padding:0 10px;
   box-sizing:border-box;
   font-size: 12px;
 }

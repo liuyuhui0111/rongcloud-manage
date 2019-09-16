@@ -13,7 +13,7 @@
         <i class="fi icon2zixunxiaoxi"></i>
         咨询消息
       </button>
-      <div v-if="isShowMessage" class="mask">
+      <div v-if="isShowMessage || vuexShowMessage" class="mask">
       <div class="mesbox">
         <message ref="message"
         @hide="hide"
@@ -52,11 +52,14 @@ export default {
       },
       isShowMessage: false,
       hasUnRead: false, // 是否有未读消息
+      timer: null,
     };
   },
   mounted() {
     this.getUnreadMsgCount();
-    setInterval(() => {
+    // 每次先清除一次定时器
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
       this.getUnreadMsgCount();
     }, 5 * 1000);
   },

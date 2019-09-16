@@ -21,6 +21,7 @@ export default new Vuex.Store({
 		curChangeUserData:{},		//当前转单对象信息存储  用户id  用户名称 用户账户 imid等
 		meslist:{},		//聊天信息
 		userlist:[],		//用户咨询单列表
+		vuexShowMessage:false,		//全局控制是否显示聊天框
 	},
 	getters: {},
 	actions: {},
@@ -35,6 +36,11 @@ export default new Vuex.Store({
 	  	}
 	    state.imtoken = token;
 	    
+	  },
+	  setvuexShowMessage(state,data) {
+	  	// 设置token  同步到cookie 有效期默认7天
+	  	//如果token不存在 默认清空token
+	    state.vuexShowMessage = data;
 	  },
 	  setuserlist(state,data) {
 	  	// 设置token  同步到cookie 有效期默认7天
