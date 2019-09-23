@@ -176,14 +176,18 @@ export default {
 
           // this.showMessage();
 
-
           if (params && params.appkey && params.token) {
             this.rongInit(params);
           } else {
             throw new Error('appkey 和 token 不能为空');
           }
-          this.showMessage();
+
+          // this.showMessage();
         });
+      } else if (params && params.appkey && params.token) {
+        this.rongInit(params);
+      } else {
+        throw new Error('appkey 和 token 不能为空');
       }
     },
 
@@ -304,11 +308,7 @@ export default {
       // 排序 优先在线的置顶
       console.log(this.curmesid);
       userlist.sort((a, b) => {
-        if (a.online > b.online) {
-          return 1;
-        } if (a.online < b.online) {
-          return -1;
-        } if (a.status < b.status) {
+        if (a.status < b.status) {
           // status   状态，0：未咨询 1：咨询中，2：咨询结束
           return -1;
         }
@@ -395,9 +395,9 @@ export default {
       // 切换没聊天信息  获取聊天记录
       if (!item.historyFlag) {
         // 如果获取过聊天记录 就不在获取了
-        item.historyFlag = true;
+        
         // 防止请求在消息之前返回
-        this.getHistoryMessageListFn(item.mesid,fn);
+        this.getHistoryMessageListFn(item,fn);
       }
       /* eslint-enable */
     },
@@ -445,9 +445,21 @@ export default {
       this.isShowMessageBox = true;
       this.$emit('show');
     },
-    hideMessage() {
+    sleep(time) {
+      // 延迟几秒执行
+      /*eslint-disable*/ 
+      return new Promise((resolve)=>{
+        setTimeout(()=>{
+          resolve();
+        },time)
+      });
+      /* eslint-enable */
+    },
+    async hideMessage(time) {
       // 隐藏聊天框
-
+      if (time) {
+        await this.sleep(time);
+      }
       this.isShowMessageBox = false;
       this.$emit('hide');
     },
@@ -709,7 +721,7 @@ export default {
         });
         // 刷新新消息提醒
         this.setuserlist(window.vue.userlist);
-        if (!hisFlag) {
+        if (!hisFlag && res.data.objectName === 'RC:InfoNtf') {
           console.log('没有获取过聊天记录，切换会重新拉取最新聊天记录');
           return;
         }
@@ -747,28 +759,28 @@ export default {
         this.setUserId(res.data);
         // 根据用户id targetid 获取历史记录
         // this.getHistoryMessageListFn();
-      } else if (res.code === '-9999') {
-        // 断开连接
-        console.log('断开连接');
-        this.hideMessage();
       } else if (res.code === '1001') {
         this.$message(res.message);
-      } else if (res.code === '1002') {
-        this.$message(res.message);
-        this.hideMessage(2000);
+      } else {
+        console.log(res.message);
       }
     },
 
-    async getHistoryMessageListFn(tid, fn) {
-      // let meslist = JSON.parse(JSON.stringify(this.meslist));
-      let res = await getIMById({ id: this.curid });
-      let curmesid = tid || this.curmesid;
+    async getHistoryMessageListFn(citem, fn) {
+      let tid = citem.mesid;
       /* eslint-disable */
+      // let meslist = JSON.parse(JSON.stringify(this.meslist));
+      let res = await getIMById({ id: this.curid }).catch(() => {
+        // 如果接口报错 轮询请求
+        citem.historyFlag = false;
+      });
+      let curmesid = tid || this.curmesid;
+      
       if(window.vue.meslist[curmesid] === undefined){
         window.vue.meslist[curmesid]=[];
       }
       if(res.data.code === '0000'){
-       
+        
         if(res.data.data.msgList.length!==window.vue.meslist[curmesid].length){
           window.vue.meslist[curmesid] = res.data.data.msgList;
         }
@@ -781,29 +793,29 @@ export default {
         });
       }
       if(window.vue.meslist[curmesid].length>0){
-
-        if(fn){
-          console.log("聊天记录拉取成功====且是初始化进入")
-          fn();
-        }
+        citem.historyFlag = true;
       }else{
-        // 获取聊天记录失败 轮询获取
-        setTimeout(()=>{
-          this.getHistoryMessageListFn(curmesid,fn);
-        },500)
+        // 如果返回列表为[] 轮询请求
+        citem.historyFlag = false;
         
       }
-      
+      if(fn){
+        console.log("聊天记录拉取成功====且是初始化进入")
+        fn();
+      }
     },
 
 
-    imgClick(item) {
-      console.log(item, '点击图片消息');
-      if (item.objectName == 'RC:ImgMsg') {
-        window.open(item.content.imageUri, '_blank');
-      } else {
-        window.open(item.content.fileUrl, '_blank');
+    imgClick(url) {
+      if(document.getElementById('elemIF')){
+        document.body.removeChild(document.getElementById('elemIF'))
       }
+
+      let elemIF = document.createElement('iframe');
+      elemIF.id = "elemIF";
+      elemIF.src = url;
+      elemIF.style.display = 'none';
+      document.body.appendChild(elemIF);
     },
     dispatch(el) {
       let event = document.createEvent('MouseEvents');
@@ -1046,6 +1058,12 @@ export default {
       }
       return time;
     },
+    async imloginOut(mes) {
+      // im异常情况 提示  退出登录
+      console.log(mes);
+      await this.$$confirm(mes, '确定', '', '', true);
+      this.hideMessage();
+    },
 
     rongInit(params) {
       // 容联初始化
@@ -1067,6 +1085,7 @@ export default {
 
 
       RongIMClient.init(appkey, null, config);
+      oThis.showMessage();
       RongIMClient.setConnectionStatusListener({
         onChanged(status) {
           oThis.addPromptInfo({ code: status, message: '' });
@@ -1074,7 +1093,7 @@ export default {
             case RongIMLib.ConnectionStatus.CONNECTED:
             case 0:
               console.log('连接成功');
-
+              oThis.showMessage();
               break;
 
             case RongIMLib.ConnectionStatus.CONNECTING:
@@ -1092,24 +1111,55 @@ export default {
             case RongIMLib.ConnectionStatus.NETWORK_UNAVAILABLE:
             case 3:
               oThis.addPromptInfo({ code: '1001', message: '网络不可用' });
+              oThis.$message('网络不可用,请检查网络');
               break;
 
             case RongIMLib.ConnectionStatus.CONNECTION_CLOSED:
             case 4:
-              oThis.addPromptInfo({ code: '-9999', message: '未知原因，连接关闭' });
+              // oThis.addPromptInfo({ code: '-9999', message: '未知原因，连接关闭' });
+              // 尝试重连
+              RongIMClient.reconnect({
+                onSuccess() {
+                  // 重连成功
+                },
+                onError() {
+                  // 重连失败
+                  console.log('未知原因，连接关闭');
+                  oThis.imloginOut('未知原因，连接关闭');
+                  // oThis.hideMessage(2000);
+                },
+              });
               break;
 
             case RongIMLib.ConnectionStatus.KICKED_OFFLINE_BY_OTHER_CLIENT:
             case 6:
-              oThis.addPromptInfo({ code: '1002', message: '用户账户在其他设备登录，本机会被踢掉线' });
+              // oThis.addPromptInfo({ code: '1002', message: '用户账户在其他设备登录，本机会被踢掉线' });
+              console.log('用户账户在其他设备登录');
+              oThis.imloginOut('用户账户已在其他设备登录');
+              // oThis.hideMessage(2000);
               break;
 
             case RongIMLib.ConnectionStatus.DOMAIN_INCORRECT:
             case 12:
-              oThis.addPromptInfo({ code: '1002', message: '当前运行域名错误，请检查安全域名配置' });
+              // oThis.addPromptInfo({ code: '1002', message: '当前运行域名错误，请检查安全域名配置' });
+              console.log('当前运行域名错误，请检查安全域名配置');
+              oThis.imloginOut('当前运行域名错误，请检查安全域名配置');
+              // oThis.hideMessage(2000);
               break;
             default:
-              oThis.addPromptInfo({ code: '404', message: '服务器返回错误' });
+              // oThis.addPromptInfo({ code: '404', message: '未知原因，连接关闭' });
+              // 尝试重连
+              RongIMClient.reconnect({
+                onSuccess() {
+                  // 重连成功
+                },
+                onError() {
+                  // 重连失败
+                  console.log('未知原因，连接关闭');
+                  oThis.imloginOut('未知原因，连接关闭');
+                  // oThis.hideMessage(2000);
+                },
+              });
           }
         },
       });
@@ -1128,12 +1178,28 @@ export default {
       RongIMClient.connect(token, {
         onSuccess(userId) {
           oThis.addPromptInfo({ code: '0000', data: userId });
+          oThis.showMessage();
         },
         onTokenIncorrect() {
+          console.log('token无效，请重新登录');
           oThis.addPromptInfo({ code: '0002', data: 'token无效' });
+          oThis.imloginOut('token无效，请重新登录');
+          // oThis.hideMessage(2000);
         },
         onError(errorCode) {
-          oThis.addPromptInfo(errorCode);
+          oThis.addPromptInfo({ code: errorCode, message: errorCode });
+          // 尝试重连
+          RongIMClient.reconnect({
+            onSuccess() {
+              // 重连成功
+            },
+            onError() {
+              // 重连失败
+              console.log('未知原因，连接关闭');
+              oThis.imloginOut('未知原因，连接关闭');
+              // oThis.hideMessage(2000);
+            },
+          });
         },
       }, null);
     },

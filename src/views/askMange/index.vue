@@ -30,6 +30,7 @@
     </div>
     <div class="content">
       <el-checkbox
+                  v-if="expertType*1 === 2"
                   v-model="turnOrdered"
                   class="turnOrder"
                   @change="turnOrderChange">
@@ -99,6 +100,7 @@ export default {
       consultingNum: '',
       score: '',
       totalTime: '',
+      expertType: '', // 专家类型
       askingCount: '咨询中（0）',
       completeCount: '已结束（0）',
       treeType: {
@@ -140,6 +142,7 @@ export default {
     };
   },
   mounted() {
+    this.expertType = this.curUserData.type || 0;
     this.titleInit();
     this.initAsking();
     this.initComplete();

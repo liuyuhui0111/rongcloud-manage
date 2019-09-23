@@ -114,6 +114,16 @@ router.afterEach(async (to) => {
   if (!to.meta.isHideProcess) {
     NProgress.done();
   }
+  // 埋点相关
+  window.vue.$nextTick(() => {
+    // if(store.getters.token){
+    //   window.sensors.login(store.getters.token);
+    // }
+    // window.sensors.track('frompath',{"frompath":from.fullPath,"topath":to.fullPath});
+    window.sensors.quick('autoTrackSinglePage', {
+      platForm: 'web',
+    });
+  });
 
   // ...
 });

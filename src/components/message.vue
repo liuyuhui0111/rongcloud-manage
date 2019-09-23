@@ -35,13 +35,14 @@
       {stop:item.type==1},
       {newmes:item.newmes==1},
       {group:item.exchange == 1 && item.toExpertId != curUserData.id},
-      {gray1:item.online==1 || item.status==2},
+      {exchange:item.exchange == 1},
+      {gray1: item.status==2},
 
       ]"
       :key="index">
         <div class="imgbox">
         <span class="qtype" v-if="item.qtype == '0' && item.status==2">问题未分类</span>
-        <div :class="{gray:item.online==1 || item.status==2}">
+        <div :class="{gray: item.status==2}">
           <img :src="item.icon" alt="">
           <img v-if="item.exchange == 1
           && item.toExpertId != curUserData.id"
@@ -53,7 +54,7 @@
           alt="" class="expertto">
         </div>
         </div>
-        <div :class="{gray:item.online==1 || item.status==2}" class="intro">
+        <div :class="{gray: item.status==2}" class="intro">
           <p class="namebox">
             <span class="name">{{encryptionFn(item.name)}}</span>
             <span class="time">{{getTimeFn(item,'2')}}</span>
@@ -108,7 +109,7 @@
             <span class="icon"></span>
 
           <span class="name">
-          {{curTargetUserData.name}}咨询中
+          {{encryptionFn(curTargetUserData.name)}}咨询中
           </span>
         </div>
         </el-popover>
@@ -158,8 +159,14 @@
               v-if="item.content.contentType =='MSG_USER_SOURCE'">
                 <!-- 来源 -->
                 <div class="mesitem">用户来源：{{item.content.content.fromName}}</div>
-                <div @click="openWindow(item.content.content.fromAddress)"
-                class="mesitem pointer">当前正在浏览的页面：{{item.content.content.fromContent}}</div>
+                <div v-if="item.content.content
+                && item.content.content.fromContent
+                && item.content.content.fromAddress"
+                @click="openWindow(item.content.content.fromAddress)"
+                class="mesitem pointer">当前正在浏览的页面：
+                <a class="noline"
+                href="javascript:">{{item.content.content.fromContent}}</a>
+                </div>
               </div>
 
                <div class="msg-evaluate msgbox"
@@ -209,7 +216,7 @@
           <template v-if="item.objectName == 'RC:ImgMsg'">
             <!-- 图文消息 -->
             <div class="imgbox mes"
-            @click="imgClick(item)"
+            @click="imgClick(item.content.imageUri)"
             :class="{finish:!item.uploading}">
               <img :id="item.id" :src="item.content.content">
               <span class="after"></span>
@@ -219,7 +226,7 @@
           <template v-if="item.objectName == 'RC:FileMsg'">
             <!-- 文件消息 -->
             <div class="filebox imgbox mes"
-            @click="imgClick(item)"
+            @click="imgClick(item.content.fileUrl)"
             :class="{finish:!item.uploading}">
               <a href="javascript:">{{item.content.name}}</a>
               <span class="after"></span>
@@ -254,15 +261,15 @@
         userlist[curMessageIndex].fromExpertId == curUserData.id)
         || userlist[curMessageIndex].status==2" class="hidemask">
           <!-- 禁用聊天遮罩层 -->
-          <div
+         <!--  <div
           @click="showQuestionFn()"
           v-if="userlist[curMessageIndex].status==2
           && userlist[curMessageIndex].qtype == '0'"
-          class="toast pointer"><p>已结束咨询，点击去分类</p></div>
+          class="toast pointer"><p>已结束咨询，点击去分类</p></div> -->
 
-          <div v-if="userlist[curMessageIndex].status==2
+          <!-- <div v-if="userlist[curMessageIndex].status==2
           && userlist[curMessageIndex].qtype == '1'"
-          class="toast"><p>已结束咨询</p></div>
+          class="toast"><p>已结束咨询</p></div> -->
 
           <div v-if="userlist[curMessageIndex].exchange == 1
           &&userlist[curMessageIndex].fromExpertId == curUserData.id" class="toast">
@@ -274,7 +281,9 @@
         <div class="btns">
           <span @click.stop="isShowquickmesBox=false;
           closeCofirmBox=false;
-          emojiClick();" class="iconfont iconbiaoqing"></span>
+          emojiClick();"
+          title="表情"
+          class="iconfont iconbiaoqing"></span>
 
           <label for="picture">
           <span title="上传图片"
@@ -303,6 +312,8 @@
           <span
           @click="showQuestionFn()"
           title="问题分类"
+          :class="{on:userlist[curMessageIndex].status==2
+          && userlist[curMessageIndex].qtype == '0'}"
           class="iconfont iconwentifenlei"></span>
 
           <!-- 转单 -->
@@ -326,6 +337,7 @@
           <span @click.stop="isShowEmoji=false;
           isShowquickmesBox=false;
           closeCofirmBox=!closeCofirmBox"
+          title="结束咨询"
           class="iconfont iconjieshuzixun"></span>
           </div>
 
@@ -556,6 +568,9 @@ padding: 0 0 0 0px;
 </style>
 <style scoped>
 /*个人信息*/
+a.noline{
+  text-decoration: none;
+}
 .useraccount{
   padding: 10px 20px;
 }
@@ -674,6 +689,9 @@ text-align: center;
   .userlistbox .iconzixunzhong{
     color: #09bb0c;
   }
+  .userlistbox .gray .iconzixunzhong{
+    color: #999;
+  }
   .userlistbox .search-box .inpbox{
     background: #86E3F1;
     border-radius: 2px;
@@ -715,12 +733,26 @@ text-align: center;
     box-sizing:border-box;
     padding: 10px;
     cursor: pointer;
+    border-bottom: 1px solid #e7e7e7;
+    position: relative;
   }
-  .userlistbox .userlist .item.gray1{
-    background: rgba(197,197,197,1);
+  .ie10 .userlist .item.gray1,
+  .ie11 .userlist .item.gray1{
+    background-color: #eee;
   }
   .userlistbox .userlist .item.on{
-    background: #EDEDED;
+    background-color: #EDEDED;
+  }
+  .userlistbox .userlist .item.exchange:after{
+    position: absolute;
+    content: "";
+    width: 24px;
+    height: 24px;
+    right: 0;
+    top: 0;
+    background: url('./img/icon-bzd.png') no-repeat center center;
+    -webkit-background-size: 24px 24px;
+    background-size: 24px 24px;
   }
   .userlistbox .userlist .item .imgbox{
     width: 74px;
@@ -771,6 +803,9 @@ text-align: center;
     justify-content: space-between;
     font-size: 12px;
     color: #333;
+  }
+  .userlistbox .userlist .item .intro.gray p{
+    color: inherit;
   }
   .userlistbox .userlist .item .intro .name{
     font-size: 14px;
@@ -1000,7 +1035,7 @@ font-weight: bold;
 .hidemask{
   position: absolute;
   z-index: 99;
-  background: rgba(222,222,222,0.6);
+  background: rgba(240,240,240,0.6);
   top: 0;
   left: 0;
   right: 0;
@@ -1162,6 +1197,10 @@ align-items: center;
 .messagebox .sendbox .btns span.iconzixunzhong,
 .messagebox .sendbox .btns span.iconzhuandan1{
   font-size: 17px;
+}
+
+.messagebox .sendbox .btns span.iconwentifenlei.on{
+  z-index: 111;
 }
 .messagebox .sendbox .btns span:hover{
   color: #33C8DF;

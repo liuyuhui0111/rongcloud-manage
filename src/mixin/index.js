@@ -94,6 +94,7 @@ export default {
           });
         },
         $message(mes) {
+          if (mes === undefined) return;
           let message = typeof (mes) === 'string' ? mes : mes.message;
           let flag = true;
           this.manageMessageList.forEach((item) => {
