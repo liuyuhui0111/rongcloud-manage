@@ -38,7 +38,7 @@
       </el-checkbox>
       <el-tabs v-model="activeName" @tab-click="handleClick(activeName)">
         <!-- eslint-disable -->
-        <el-tab-pane :label="askingCount" name="first">
+        <el-tab-pane :label="'咨询中（' + askingCount + '）' " name="first">
           <BasicTable 
                     :treeType="treeType" 
                     :tableOptions="tableOptions" 
@@ -46,11 +46,11 @@
                     :fatherDetail="fatherDetail">
           </BasicTable>
         </el-tab-pane>
-        <el-tab-pane :label="completeCount" name="second">
+        <el-tab-pane :label="'已结束（'+ completeCount +'）'" name="second">
           <BasicTable 
                     :treeType="treeType" 
                     :tableOptions="tableOptions" 
-                    :tableData="completeData"
+                    :tableData="askingData"
                     :fatherDetail="fatherDetail">
           </BasicTable>
         </el-tab-pane>
@@ -101,8 +101,9 @@ export default {
       score: '',
       totalTime: '',
       expertType: '', // 专家类型
-      askingCount: '咨询中（0）',
-      completeCount: '已结束（0）',
+      askingType: '1', // 咨询表格类型
+      askingCount: 0,
+      completeCount: 0,
       treeType: {
         type: 'operate',
         detail: {
@@ -145,7 +146,7 @@ export default {
     this.expertType = this.curUserData.type || 0;
     this.titleInit();
     this.initAsking();
-    this.initComplete();
+    // this.initComplete();
   },
   methods: {
     // 获取页面头部统计数据
@@ -158,7 +159,6 @@ export default {
         account: this.curUserData.account || '',
       };
       let res = await getHeadInfo(params);
-      console.log('咨询管理头部数据', res);
       if (res.data.code === '0000') {
         this.consultingNum = res.data.data.totalAnswerNum || 0;
         this.score = res.data.data.score || 0;
@@ -172,131 +172,63 @@ export default {
     },
     // 获取咨询中的列表数据
     async initAsking() {
-      this.askingDataAll = [];
-      this.askingCount = '咨询中（0）';
       let params = {
         expertId: this.curUserData.id || '',
-        status: '1',
-        page: `${this.currentPage}`,
-        rows: `${this.pageSize}`,
+        status: this.askingType || '1',
+        page: this.currentPage || 1,
+        rows: this.pageSize || 10,
         exchange: this.turnOrdered ? '1' : '0',
       };
       let res = await getIMList(params);
-      console.log('咨询管理列表数据', res);
-      if (res.data.code === '0000') {
+      res = res.data;
+      if (res.code === '0000') {
         /* eslint-disable */ 
-        this.askingDataAll = res.data.data.list.map((item) => {
+        this.askingData = res.data.list.map((item) => {
           item.beginTime = date(item.beginTime, 'yyyy-MM-dd hh:mm:ss');
           item.account = item.account.slice(0 , 3) + "****" + item.account.slice(-4);
           return item;
         });
+        this.askingCount = res.data.consultingNum;
+        this.completeCount = res.data.endConsultNum;
         /* eslint-enable */
-        this.askingData = this.askingDataAll;
-        this.askingCount = `咨询中（${this.askingData.length}）`;
-        this.total = this.askingData.length;
+        this.total = this.askingType === '1' ? res.data.consultingNum : res.data.endConsultNum;
       } else {
         this.$message({
           message: res.data.message,
           type: 'error',
         });
         this.askingData = [];
-        this.askingCount = '咨询中（0）';
+        this.askingCount = 0;
         this.total = 0;
-      }
-    },
-    // 获取已完成咨询的列表数据
-    async initComplete() {
-      this.completeDataAll = [];
-      this.completeCount = '已结束（0）';
-      let params = {
-        expertId: this.curUserData.id || '',
-        status: '2',
-        page: `${this.currentPage}`,
-        rows: `${this.pageSize}`,
-        exchange: this.turnOrdered ? '1' : '0',
-      };
-      let res = await getIMList(params);
-      console.log('咨询管理列表数据', res);
-      if (res.data.code === '0000') {
-        /* eslint-disable */ 
-        this.completeDataAll = res.data.data.list.map((item) => {
-          item.beginTime = date(item.beginTime, 'yyyy-MM-dd hh:mm:ss');
-          item.account = item.account.slice(0 , 3) + "****" + item.account.slice(-4);
-          return item;
-        });
-        /* eslint-enable */
-        this.completeData = this.completeDataAll;
-        this.completeCount = `已结束（${this.completeData.length}）`;
-      } else {
-        this.$message({
-          message: res.data.message,
-          type: 'error',
-        });
-        this.completeData = [];
-        this.completeCount = '已结束（0）';
       }
     },
     // 切换tabs
     handleClick(val) {
-      let params = {};
-      params = val === 'first' ? { askingType: 'asking' } : { askingType: 'complete' };
-      params.orderStatus = this.turnOrdered;
-      if (val === 'first') {
-        this.initAsking();
-      } else {
-        this.initComplete();
-      }
-      this.total = this.activeName === 'first' ? this.askingData.length : this.completeData.length;
-      console.log(params);
+      this.currentPage = 1; // 初始化第一页
+      this.askingType = val === 'first' ? '1' : '2';
+      this.initAsking();
     },
     turnOrderChange(val) {
-      console.log('此前的转单状态是', val);
+      this.currentPage = 1; // 初始化第一页
       this.turnOrdered = val;
-      if (this.activeName === 'first') {
-        this.initAsking();
-        if (val) {
-          // this.askingData = this.askingDataAll.filter(item => item.exchange === 1);
-        } else {
-          // this.initComplete();
-          // this.askingData = this.askingDataAll.filter(item => item.exchange === 0);
-        }
-        this.total = this.askingData.length;
-        this.askingCount = `咨询中（${this.askingData.length}）`;
-      } else {
-        this.initComplete();
-        // if (val) {
-        //   this.completeData = this.completeDataAll.filter(item => item.exchange === 1);
-        // } else {
-        //   this.completeData = this.completeDataAll.filter(item => item.exchange === 0);
-        // }
-        this.total = this.completeData.length;
-        this.completeCount = `已结束（${this.completeData.length}）`;
-      }
+      this.initAsking();
     },
     // 查看咨询记录
-    fatherDetail(row, rowIndex) {
-      console.log(row, rowIndex);
+    fatherDetail(row) {
       this.mesid = row.id;
       this.detailsToView = true;
     },
     watchBack() {
       this.detailsToView = false;
     },
-    handleSizeChange(val) {
-      this.currentPage = val;
-      if (this.activeName === 'first') {
-        this.initAsking();
-      } else {
-        this.initComplete();
-      }
-    },
     currentChange(val) {
+      this.currentPage = val;
+      this.initAsking();
+    },
+    handleSizeChange(val) {
+      this.currentPage = 1;
       this.pageSize = val;
-      if (this.activeName === 'first') {
-        this.initAsking();
-      } else {
-        this.initComplete();
-      }
+      this.initAsking();
     },
     timeFormat(val) {
       let arr = [];
@@ -408,7 +340,7 @@ export default {
     }
     /deep/.el-select .el-input .el-select__caret {
     line-height: 22px!important;
-}
+    }
   }
 }
 </style>

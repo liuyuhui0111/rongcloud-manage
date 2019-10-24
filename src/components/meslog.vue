@@ -73,6 +73,10 @@ export default {
       type: String,
       default: () => '',
     },
+    fromExpertId: { // 转单专家id
+      type: String,
+      default: () => '',
+    },
     meslogList: {
       type: Object,
       default: () => null,
@@ -85,23 +89,8 @@ export default {
     async init() {
       /* eslint-disable */
       
-      if(this.meslogList && this.meslogList.content.length>0){
-         let arr = [];
-        // 过滤聊天记录  不展示系统自定义消息;
-        this.meslogList.content.forEach((item)=>{
-          if(item.objectName !== 'RC:DxhyMsg' 
-            && item.objectName !=='RC:GrpNtf'
-            && item.targetId 
-            && item.fromUserId){
-            arr.push(item);
-          }
-        })
-        this.list = arr;
-        this.title = this.meslogList.title;
-        this.isShowPage = true;
-        return;
-      }
-      let params = { id: this.mesid }
+      
+      let params = { id: this.mesid,fromExpertId:this.fromExpertId }
       let res = await getIMById(params);
       
       this.isShowPage = true;
@@ -182,7 +171,7 @@ export default {
 .question{
   position: absolute;
   top:0;
-  left: 0;
+  left:68px;
   bottom: 0;
   right: 0;
   background: #fff;

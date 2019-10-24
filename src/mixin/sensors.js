@@ -6,11 +6,10 @@ export default {
         // 神策埋点
         track(eventName, data, fn) {
           const commonData = {
-            productName: '优税专家',
+            productName: window.COMMON_ENV.name,
             platformType: 'web',
             version: window.COMMON_ENV.version,
           };
-          // let params = Object.assign(commonData, data);
           // 设置公共属性
           window.sensors.registerPage(commonData);
           if (!eventName) {
@@ -27,7 +26,7 @@ export default {
 
         // 发送图片
         yszj_sendPicture() {
-          this.track('yszj_sendPicture', { Affiliated: '用户端im' });
+          this.track('yszj_sendPicture', { Affiliated: '专家端im' });
         },
 
         // 客服转单
@@ -37,7 +36,7 @@ export default {
 
         // 发送文件
         yszj_sendFile() {
-          this.track('yszj_sendFile', { Affiliated: '用户端im' });
+          this.track('yszj_sendFile', { Affiliated: '专家端im' });
         },
 
         // 快捷回复

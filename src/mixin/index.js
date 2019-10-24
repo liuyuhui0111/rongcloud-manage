@@ -2,7 +2,7 @@ import {
   mapGetters,
   mapMutations,
 } from 'vuex';
-import { login, loginout } from '@/api/apis';
+import { expertLogout } from '@/api/apis';
 
 export default {
   install(Vue) {
@@ -58,7 +58,7 @@ export default {
             },
           ],
           manageMessageList: [], // 消息管理
-          confirmManageMessageList: [], // confirm消息管理
+          confirmManageMessageList: [], // confirm 消息管理
         };
       },
       computed: {
@@ -66,23 +66,62 @@ export default {
           'token', // 登录token
           'imtoken', // 登录token
           'userId', // 登录token
+          'curTargetId', // 登录token
           'curUserData', // 当前用户信息
           'curTargetUserData', // 目标用户信息
           'curChangeUserData', // 转单专家用户信息
-          'mesListData',
-          'rongCloudData', // 融云消息
+          'meslist',
+          'userlist',
+          'vuexShowMessage', // 是否展示聊天窗口
+          'curMessageIndex',
         ]),
       },
       methods: {
-
         login() {
-          login();
+          this.$router.replace('/login');
+        },
+        logout() {
+          expertLogout({ id: this.curUserData.id }).then((res) => {
+            if (res.data.code === '0000' || res.data.code === '1058') {
+              this.setToken('');
+              sessionStorage.clear();
+              localStorage.clear();
+              this.$router.replace('/login');
+            } else {
+              this.$message({
+                message: res.data.message,
+                type: 'error',
+              });
+            }
+          });
+        },
+        $message(mes) {
+          if (mes === undefined) return;
+          let message = typeof (mes) === 'string' ? mes : mes.message;
+          let flag = true;
+          this.manageMessageList.forEach((item) => {
+            if (item === message) {
+              flag = false;
+            }
+          });
+          if (flag) {
+            this.manageMessageList.push(message);
+            setTimeout(() => {
+              this.manageMessageList.splice(0, 1);
+            }, 3000);
+          } else {
+            return;
+          }
+          if (typeof (mes) === 'string') {
+            this.$$message({
+              message: mes,
+              type: 'warning',
+            });
+          } else {
+            this.$$message(mes);
+          }
         },
 
-        loginout() {
-          this.setToken('');
-          loginout();
-        },
         delItemFromList(curitem, list) {
           let i = -1;
           list.forEach((item, index) => {
@@ -129,39 +168,7 @@ export default {
             });
           });
         },
-        $message(mes) {
-          if (!mes) return;
-          let message = typeof (mes) === 'string' ? mes : mes.message;
-          let flag = true;
-          this.manageMessageList.forEach((item) => {
-            if (item === message) {
-              flag = false;
-            }
-          });
-          if (flag) {
-            this.manageMessageList.push(message);
-            setTimeout(() => {
-              this.manageMessageList.splice(0, 1);
-            }, 3000);
-          } else {
-            return;
-          }
-          if (typeof (mes) === 'string') {
-            this.$$message({
-              message: mes,
-              type: 'warning',
-            });
-          } else {
-            this.$$message(mes);
-          }
-        },
-        setcurUserDataFn(data) {
-          console.log(data);
-          // 清除token
-          this.setToken(data.token);
-          this.setImToken('');
-          this.setcurUserData(data);
-        },
+
 
         routerGoBlank(path, q) {
           // 在新标签页打开
@@ -186,14 +193,14 @@ export default {
           'setToken',
           'setImToken',
           'setUserId',
+          'setCurTargetId',
           'setcurUserData', // 当前用户信息
           'setcurTargetUserData', // 目标用户信息
           'setcurChangeUserData', // 转单专家用户信息
-          'setmesListData',
-        ]),
-        ...mapMutations('rongcloud', [
-          'setRongCloudUser',
-          'setRongCloudData',
+          'setmeslist', // 聊天列表
+          'setuserlist', // 咨询单列表
+          'setvuexShowMessage', // 是否展示聊天窗口
+          'setcurMessageIndex', // 是否展示聊天窗口
         ]),
       },
 

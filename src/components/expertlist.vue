@@ -251,7 +251,7 @@ margin-bottom: 6px;
 .question{
   position: absolute;
   top:0;
-  left: 0;
+  left: 68px;
   bottom: 0;
   right: 0;
   background: #fff;

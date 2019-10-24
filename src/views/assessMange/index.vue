@@ -133,19 +133,18 @@ export default {
           return item;
         });
         this.total = res.data.data.total;
-        this.currentChange = res.data.data.page;
         /* eslint-enable */
         console.log('获取到的评价列表数据', res);
       } else {
         this.tableData = [];
         this.total = 0;
-        this.currentChange = 1;
       }
     },
     starChange() {
       this.init();
     },
     handleSizeChange(val) {
+      this.currentPage = 1;
       this.rows = val;
       this.init();
     },
@@ -192,6 +191,16 @@ body {
 }
 .assess {
   padding:20px;
-
+  .footTool{
+    padding: 0 10px 20px 10px;
+    background: #fff;
+    overflow: hidden;
+    /deep/.el-select>.el-input{
+      height: 22px!important;
+    }
+    /deep/.el-select .el-input .el-select__caret {
+    line-height: 22px!important;
+    }
+  }
 }
 </style>

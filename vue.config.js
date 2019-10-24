@@ -1,4 +1,4 @@
-let publicPath = process.env.NODE_ENV === 'development' ? '/' : '/expertclient/'; // 生产环境文件构建路径
+let publicPath = process.env.NODE_ENV === 'development' ? '/' : '/expert/'; // 生产环境文件构建路径
 /*eslint-disable*/
 var path = require('path');
 const pageProxy = require(path.join(__dirname,'/src/api/proxy.js'));   //导入pageProxy
@@ -12,6 +12,7 @@ let proxy = {
 ...pageProxy
 };
 
+// console.log(proxy);
 
 module.exports = {
     // 基本路径
@@ -33,7 +34,6 @@ module.exports = {
       // if (process.env.NODE_ENV === 'production') {
       //   config.optimization.minimizer[0].options.terserOptions.compress.drop_console = true
       // }
-
     },
     css: {
       loaderOptions: { // 向 CSS 相关的 loader 传递选项

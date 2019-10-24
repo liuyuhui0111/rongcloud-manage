@@ -12,7 +12,7 @@
         placement="bottom"
         popper-class="common-layout-header-dialog-tipbox"
         width="120"
-        trigger="click"
+        trigger="hover"
       >
         <div class="user" slot="reference">
           <img class="avatar" :src="curUserData.headImg" alt="">

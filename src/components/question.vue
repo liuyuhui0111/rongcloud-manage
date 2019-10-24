@@ -56,6 +56,7 @@ import {
   getFieldList,
   getTaxCategoryList,
   questionSort,
+  getQuestionById,
 } from '@/api/apis';
 
 export default {
@@ -67,6 +68,11 @@ export default {
       getTradeListRes: [],
       getFieldListRes: [],
       getTaxCategoryListRes: [],
+      checkRes: {
+        trade: '',
+        field: '',
+        taxCategory: '',
+      }, // 存储已经选过的行业信息
     };
   },
   props: {
@@ -85,10 +91,21 @@ export default {
   methods: {
     async init() {
       /* eslint-disable */
+      let res = await getQuestionById({id:this.mesid});
+      if(res.data.code === '0000'){
+        this.checkRes = res.data.data;
+      }
       getTradeList().then((res) => {
+        
         if (res.data.code === '0000') {
           res.data.data.forEach((item) => {
-            item.active = false;
+            if(this.checkRes.trade 
+            && this.checkRes.trade.indexOf(item.id) !== -1){
+              item.active = true;
+            }else{
+              item.active = false;
+            }
+            
           });
           this.getTradeListRes = res.data.data;
         }
@@ -96,7 +113,12 @@ export default {
       getFieldList().then((res) => {
         if (res.data.code === '0000') {
           res.data.data.forEach((item) => {
-            item.active = false;
+            if(this.checkRes.field 
+            && this.checkRes.field.indexOf(item.id) !== -1){
+              item.active = true;
+            }else{
+              item.active = false;
+            }
           });
           this.getFieldListRes = res.data.data;
         }
@@ -104,7 +126,12 @@ export default {
       getTaxCategoryList().then((res) => {
         if (res.data.code === '0000') {
           res.data.data.forEach((item) => {
-            item.active = false;
+            if(this.checkRes.taxCategory 
+            && this.checkRes.taxCategory.indexOf(item.id) !== -1){
+              item.active = true;
+            }else{
+              item.active = false;
+            }
           });
           this.getTaxCategoryListRes = res.data.data;
         }
@@ -157,6 +184,13 @@ export default {
     },
     async questionSortFn() {
       let checkParam = this.checkQuestion();
+      if (this.checkRes.trade === checkParam.trade
+        && this.checkRes.field === checkParam.field
+        && this.checkRes.taxCategory === checkParam.taxCategory) {
+        // 如果都相等  代表没做修改  直接隐藏
+        this.$emit('back');
+        return;
+      }
       if (!checkParam.flag) {
         // 如果没有选中
         this.$message('所属行业、所属领域为必选项');
@@ -180,6 +214,13 @@ export default {
       if (this.checkQuestion().field
         || this.checkQuestion().taxCategory
         || this.checkQuestion().trade) {
+        if (this.checkRes.trade === this.checkQuestion().trade
+            && this.checkRes.field === this.checkQuestion().field
+            && this.checkRes.taxCategory === this.checkQuestion().taxCategory) {
+          // 如果都相等  代表没做修改  直接隐藏
+          this.$emit('back');
+          return;
+        }
         let res = await this.$$confirm('您还没有提交信息，确定要退出吗？');
         if (res.code === '0000') {
           this.$emit('back');
@@ -266,7 +307,7 @@ background: #FFFDF2;
 .question{
   position: absolute;
   top:0;
-  left: 0;
+  left: 68px;
   bottom: 0;
   right: 0;
   background: #fff;

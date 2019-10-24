@@ -1,109 +1,184 @@
-<style>
-.rong-input span {
-  display: inline-block;
-  width: 60px;
-}
-.rong-show-box {
-  /*border: 1px solid lightgray;*/
-  padding: 10px;
-}
-.rong-show-box h3, .rong-show-box p {
-  margin: 5px 0;
-}
 
-</style>
 <template>
-  <!--   <div>
-      <div class="itembox1">
-      <div>id: <input type="text" v-model="params.id"></div>
-      <div>name: <input type="text" v-model="params.name"></div>
-      <div>icon: <input type="text" v-model="params.icon"></div>
-      <div>account: <input type="text" v-model="params.account"></div>
-      <div>channelFrom: <input type="text" v-model="params.channelFrom"></div>
-      <div>fromAddress: <input type="text" v-model="params.fromAddress"></div>
-      <div>fromName: <input type="text" v-model="params.fromName"></div>
-      <div>fromContent: <input type="text" v-model="params.fromContent"></div>
-      <div>companyLocation: <input type="text" v-model="params.companyLocation"></div>
-      <div>accountId: <input type="text" v-model="params.accountId"></div>
-      <div>distributorId: <input type="text" v-model="params.distributorId"></div>
-      <div>token: <input type="text" v-model="curUserData.token"></div>
+  <div v-if="curUserData.id" class="common-layout-index">
+    <layout-header></layout-header>
+    <div class="content-box">
+      <navbar></navbar>
+      <div class="content">
+        <router-view></router-view>
+      </div>
     </div>
-    <span class="itemsub" @click="init">初始化聊天</span> -->
-    <div>
-    <!-- <div class="itembox1">token: <input type="text" v-model="params.token"></div> -->
-  <!-- <span class="itemsub" @click="init">初始化聊天</span> -->
-    <div v-if="curUserData.token" class="mask">
-      <message ref="message"></message>
-
+    <layout-footer></layout-footer>
+      <button class="query-btn" :class="{unread: hasUnRead}" @click="init">
+        <i class="fi icon2zixunxiaoxi"></i>
+        咨询消息
+      </button>
+      <div v-if="isShowMessage || vuexShowMessage" class="mask">
+      <div class="mesbox">
+        <message ref="message"
+        @hide="hide"
+        @show="show"></message>
+        <!-- 问题分类页面 -->
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { getUnreadMsgCount } from '@/api/apis';
+import header from './header.vue';
+import footer from './footer.vue';
+import navbar from './navbar.vue';
 import message from '@/components/message.vue';
 
 export default {
   name: 'landing-page',
   components: {
     message,
+    layoutHeader: header,
+    layoutFooter: footer,
+    navbar,
   },
   data() {
     return {
+
+      isShowQuestion: false, // 显示问题页面
       params: {
-        id: 'l849643088@163.com',
-        name: '测试用户',
-        icon: 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1372494972,1692060958&fm=26&gp=0.jpg',
-        account: 'l849643088@163.com',
-        channelFrom: '1624',
-        fromAddress: 'http://test.5ifapiao.com:8888/course-430100004#/index',
-        fromName: '优税学院',
-        fromContent: 'http://test.5ifapiao.com:8888/course-430100004#/index',
-        companyLocation: 'http://test.5ifapiao.com:8888/course-430100004#/index',
-        accountId: 'l849643088@163.com',
-        distributorId: 0,
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWNlbnNlIjoibWFkZSBieSBoZWF2ZW4iLCJ1c2VyX25hbWUiOiJsODQ5NjQzMDhAMTYzLmNvbUNQIiwic2NvcGUiOlsic2VydmVyIl0sInVzZXJUeXBlIjoiQyIsImV4cCI6MTU2NjkxMTY4MiwidXNlcklkIjo2OTksImF1dGhvcml0aWVzIjpbIlJPTEVfVVNFUiJdLCJqdGkiOiI3ZDAwMzg1Yy1mMmQxLTQxMGQtYTMzZi0wMDZiMjExNTU4ZWMiLCJjbGllbnRfaWQiOiJmYXRjIn0.LJP4639v9-QT9rKAn2m9H6qoFJQewbPheTUShIBlKW0',
+        appkey: 'sfci50a7s3uzi',
+        token: '',
+        navi: '',
+
       },
+      isShowMessage: false,
+      hasUnRead: false, // 是否有未读消息
+      timer: null,
     };
   },
+  beforeRouterLeave() {
+    clearInterval(this.timer);
+    this.timer = null;
+  },
+  destroyed() {
+    clearInterval(this.timer);
+    this.timer = null;
+  },
   mounted() {
-    // this.init();
-    // window.vue.setcurUserDataFn({
-    //   id: 'l849643088@163.com',
-    //   name: '测试用户',
-    //   icon: 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1372494972,1692060958&fm=26&gp=0.jpg',
-    //   account: 'l849643088@163.com',
-    // });
-    console.log(this.curUserData);
+    this.getUnreadMsgCount();
+    // 每次先清除一次定时器
+    this.startLoop();
   },
   methods: {
-    init() {
-      /*eslint-disable*/ 
-      window.vue.setcurUserDataFn(this.params);
-      /* eslint-enable */
+    // 获取未读消息
+    async getUnreadMsgCount() {
+      let res = await getUnreadMsgCount({ type: 'expert', userId: this.curUserData.id });
+      if (res.data.data) {
+        this.hasUnRead = true;
+        this.stopLoop();
+      } else {
+        this.hasUnRead = false;
+      }
     },
+    async init() {
+      if (!this.token) {
+        this.$message('没有登录，去登录');
+      } else {
+        this.isShowMessage = true;
+      }
+      // this.$refs.message[0].init(this.params,this.userInfo);
+      // this.$refs['message'].init();
+    },
+
+    startLoop() {
+      // 开启轮询
+      this.stopLoop();
+      this.timer = setInterval(() => {
+        this.getUnreadMsgCount();
+      }, 5 * 1000);
+    },
+    stopLoop() {
+      // 结束轮询
+      clearInterval(this.timer);
+      this.timer = null;
+    },
+    hide() {
+      this.isShowMessage = false;
+      this.startLoop();
+    },
+    show() {
+      this.isShowMessage = true;
+      this.hasUnRead = false;
+      this.stopLoop();
+    },
+
+
   },
 };
 /* eslint-enable */
 </script>
-<style scope>
-.mask{
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-}
-.itembox1 div{
-  margin: 10px 0;
-}
-.itemsub{
-  background: #f1f1f1;
-  padding: 10px 30px;
-  margin: 10px auto;
-  cursor: pointer;
-  display: block;
-  text-align: center;
-  width: 50%;
-}
+<style>
+
+</style>
+<style lang="scss" scoped>
+  .mesbox{
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    right: 0;
+    bottom: 0;
+    left: 50%;
+    top:50%;
+    transform: translate(-50%,-50%);
+    overflow: hidden;
+    max-width: 898px;
+    max-height: 600px;
+  }
+  .content-box {
+    position: relative;
+    padding: 10px 10px 10px 230px;
+    box-sizing: border-box;
+    background-color: #F2F4F8;
+    .content {
+      min-height: 460px;
+      @media(min-height: 800px) {
+        min-height: calc(100vh - 251px);
+      }
+      background-color: #FFF;
+    }
+  }
+  .query-btn {
+    position: fixed;
+    right: 0;
+    bottom: 20%;
+    text-align: center;
+    background-color: rgba(51, 200, 223, .4);
+    border-radius: 4px 0 0 4px;
+    color: #fff;
+    border: 0;
+    outline: none;
+    padding: 15px 10px;
+    cursor: pointer;
+    transition: all .3s;
+    &:hover {
+      background-color: rgba(51, 200, 223, .9)
+    }
+    &.unread {
+      &:after {
+        content: "";
+        position: absolute;
+        top: -5px;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: red;
+      }
+    }
+    z-index: 9;
+    i {
+      display: block;
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+  }
 </style>

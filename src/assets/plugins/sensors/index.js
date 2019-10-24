@@ -26,4 +26,13 @@ import COMMON_ENV from '@/config/env';
   server_url: COMMON_ENV.sensors.server_url,
   heatmap:{}
 })
+// if (window.COMMON_ENV && window.COMMON_ENV.version) {
+//   let commonData = {
+//     productName: window.COMMON_ENV.name,
+//     platformType: 'web',
+//     version: window.COMMON_ENV.version,
+//   };
+//   // 设置公共属性
+//   window.sensors.registerPage(commonData);
+// }
 console.log(COMMON_ENV.sensors.server_url);

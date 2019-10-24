@@ -26,13 +26,13 @@ axios.interceptors.request.use(
         //   // 如果noBaseUrl不为真  拼接baseUrl
         //   config.url = BASE_URL + config.url;
         // }
-        config.headers.Authorization = store.getters.token ? 'Bearer '+store.getters.token : 'Bearer';
-        // config.headers.Authorization = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWNlbnNlIjoibWFkZSBieSBoZWF2ZW4iLCJ1c2VyX25hbWUiOiIxODUwMDM2OTE3NiIsInNjb3BlIjpbInNlcnZlciJdLCJ1c2VyVHlwZSI6IkMiLCJleHAiOjE1NjUzNTY4MDIsInVzZXJJZCI6MTgsImF1dGhvcml0aWVzIjpbIlJPTEVfVVNFUiJdLCJqdGkiOiI2MmE2ZDQ4NC1iNjE5LTRhNzgtODJkNi05ZTFlMGUwYmUwYjQiLCJjbGllbnRfaWQiOiJmYXRjIn0.bXLegVDQTYE1WgCN7u2_47y5-BsbfBi1tUWT1gq6V_A';
+        config.headers.Authorization = store.getters.token ? store.getters.token : '-1';
+        config.headers.userId = store.getters.curUserData.id ? store.getters.curUserData.id : '-1';
+        // config.headers.Authorization = '20190821111718664aac1cdf2e60146d6a0b06aa0b49ace4c';
         config.headers.httpHost = window.location.href || '';
-        config.headers.userId = store.getters.curUserData.userId ? store.getters.curUserData.userId : '-1';
 
         if(!config.isHideLoading){
-          // 如果为true 请求提示loadding
+          // 如果不为true 请求提示loadding
           requestList.push(config.url);
           if(!COMMON_LOADING){
             COMMON_LOADING = Vue.prototype.$loading();
@@ -58,13 +58,15 @@ axios.interceptors.request.use(
 
         return config;
     }, (error) => {
-         if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development') {
+              Vue.prototype.$$message.closeAll();
               Vue.prototype.$$message({
                 message: error,
                 type: 'warning'
               });
             return Promise.reject(error)
-        }else{
+        } else {
+              Vue.prototype.$$message.closeAll();
               Vue.prototype.$$message({
                 message: '请求出错，请稍后再试',
                 type: 'warning'
@@ -78,7 +80,7 @@ axios.interceptors.request.use(
       * 全局响应拦截器
 */
 axios.interceptors.response.use(
-    (response) => {
+    async (response) => {
             if(COMMON_LOADING){
 
               requestList.forEach((item,index)=>{
@@ -90,16 +92,16 @@ axios.interceptors.response.use(
                 COMMON_LOADING.close();
                 COMMON_LOADING = null;
               }
-
             }
             // console.log('token::::::::',store.getters.token,'code::::::::',response.data.code)
-            if(response.data.code === '1058' && store.getters.token){
+            if((response.data.code === '1058' 
+              || response.data.code ==='1059') 
+              && store.getters.token){
+              let mes = response.data.code === '1058' ? '登录状态过期' : '用户账户已在其他设备登录' 
               // 登录过期
-              // Vue.prototype.$$message({
-              //   message: '登录状态过期，请重新登录',
-              //   type: 'warning'
-              // });
-              store.commit('setToken','');
+              window.vue.setToken('');
+              await window.vue.$$confirm(mes, '确定', '', '', true);
+              window.vue.routerReplace('/login');
             }
             return response;
     },
@@ -119,19 +121,20 @@ axios.interceptors.response.use(
             requestList=[];
           }
         if (process.env.NODE_ENV === 'development') {
+              Vue.prototype.$$message.closeAll();
               Vue.prototype.$$message({
                 message: error,
                 type: 'warning'
               });
             return Promise.reject(error)
-        }else{
+        } else {
+              Vue.prototype.$$message.closeAll();
               Vue.prototype.$$message({
                 message: '请求出错，请稍后再试',
                 type: 'warning'
               });
             return Promise.reject('请求出错，请稍后再试')
         }
-        
 
     },
 );
