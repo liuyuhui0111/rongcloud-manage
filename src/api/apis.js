@@ -46,7 +46,11 @@ export function loginout() {
 
 //   return axios.post(url, formData);
 // }
-
+export function getIMById(params) {
+  // 根据ID获取咨询单信息
+  const url = '/login-expert/getIMById';
+  return axios.get(BASE_URL + url, { params } || {});
+}
 
 export function getUserInfo(params) {
   // 获取用户信息
@@ -71,127 +75,85 @@ export function fileUpload(params) {
   });
 }
 
-
-export function expertLogin(params) {
-  // 专家登录
-  const url = '/login-expert/expertLogin';
-  return axios.post(BASE_URL + url, params || {});
-}
-export function expertLogout(params) {
-  // 退出
-  const url = '/login-expert/expertLogout';
+export function getEquityTime(params) {
+  // 上传图片、文件
+  const url = '/consult-equity/getEquityTime';
   return axios.post(BASE_URL + url, params || {});
 }
 
-export function getVerificationCode(params) {
-  // 发送验证码
-  const url = '/login-expert/getVerificationCode';
+export function addVipNotice(params) {
+  // 添加用户购买会员提醒
+  const url = '/consult-vip-notice/addVipNotice';
+  return axios.post(BASE_URL + url, params || {});
+}
+
+export function getExpertQuestion(params) {
+  // 提交咨询，获取咨询专家
+  const url = '/consult-question/getExpertQuestion';
+  return axios.post(BASE_URL + url, params || {}, {
+    isLoading: true, // 显示loading
+  });
+}
+
+export function andEvaluate(params) {
+  // 添加用户评价
+  const url = '/account-equity/andEvaluate';
   return axios.post(BASE_URL + url, params || {});
 }
 
 
-export function resetPassword(params) {
-  // 忘记~~~~密码
-  const url = '/login-expert/resetPassword';
+export function getWorkTime(params) {
+  // 获取工作时间
+  const url = '/consult-equity/getWorkTime';
   return axios.post(BASE_URL + url, params || {});
 }
-export function getTradeList(params) {
-  // 获取行业信息
-  const url = '/expert/getTradeList';
-  return axios.get(BASE_URL + url, { params });
-}
-export function getFieldList(params) {
-  // 获取所属领域信息
-  const url = '/expert/getFieldList';
-  return axios.get(BASE_URL + url, { params });
-}
-export function getTaxCategoryList(params) {
-  // 获取所属税种信息
-  const url = '/expert/getTaxCategoryList';
-  return axios.get(BASE_URL + url, { params });
-}
-export function getCommonPhrasesList(params) {
-  // 获取常用语
-  const url = '/expert/getCommonPhrasesList';
-  return axios.get(BASE_URL + url, { params });
-}
-export function getExpertInfoList(params) {
-  // 转单弹窗-搜索专家
-  const url = '/expert/getExpertInfoList';
-  return axios.get(BASE_URL + url, { params } || {});
-}
-export function SearchPage(params, opt) {
-  // 搜索页
-  const url = '/expert/searchPage';
-  return axios.post(BASE_URL + url, params || {}, opt);
-}
-export function proposeEndConsult(params) {
-  // 专家提出是否结束咨询
-  const url = '/expert/proposeEndConsult';
-  return axios.get(BASE_URL + url, { params } || {});
-}
-export function EndConsult(params) {
-  // 结束咨询
-  const url = '/expert/EndConsult';
+export function requestAuth(params) {
+  // 用户授权
+  const url = '/consult-auth/requestAuth';
   return axios.post(BASE_URL + url, params || {});
 }
+export function getWaitNum(params) {
+  // 获取等待人数
+  const url = '/consult-question/getWaitCounts';
+  return axios.post(BASE_URL + url, params || {});
+}
+export function exchange(params) {
+  // 专家转单
+  const url = '/account-equity/exchange';
+  return axios.post(BASE_URL + url, params || {});
+}
+
+export function endEvaluate(params) {
+  // 结束咨询回话
+  const url = '/consult-question/endExpertQuestion';
+  return axios.post(BASE_URL + url, params || {});
+}
+export function uauth(params) {
+  // 回收用户数据授权
+  const url = '/account-equity/uauth';
+  return axios.post(BASE_URL + url, params || {});
+}
+
 export function questionSort(params) {
-  // 问题分类
-  const url = '/expert/questionSort';
+  // 咨询分类
+  const url = '/consult-question/questionSort';
   return axios.post(BASE_URL + url, params || {});
 }
-export function getIMById(params) {
-  // 根据ID获取咨询单信息
-  const url = '/login-expert/getIMById';
-  return axios.get(BASE_URL + url, { params, isHideLoading: true });
-}
-export function countdown(params) {
-  // 结束咨询倒计时
-  const url = '/expert/countdown';
+export function expertEvaluate(params) {
+  // 咨询专家评分
+  const url = '/consult-question/expertEvaluate';
   return axios.post(BASE_URL + url, params || {});
 }
-
-
-export function getEvaluateByCondition(params) {
-  // 根据条件查询评价信息
-  const url = '/expert/getEvaluateByCondition';
-  return axios.post(BASE_URL + url, params || {});
-}
-export function getIMListByCondition(params) {
-  // 根据条件获取咨询单信息
-  const url = '/expert/getIMListByCondition';
-  return axios.post(BASE_URL + url, params || {});
-}
-export function getEvaluateByQuestionId(params) {
-  // 根据咨询单ID查询评价信息
-  const url = '/expert/getEvaluateByQuestionId';
-  return axios.get(BASE_URL + url, { params } || {});
-}
-export function changeExpertPassword(params) {
-  // 个人设置-修改密码
-  const url = '/login-expert/changeExpertPassword';
-  return axios.post(BASE_URL + url, params || {});
-}
-export function ChangeOrder(params) {
-  // 转单
-  const url = '/expert/changeOrder';
-  return axios.post(BASE_URL + url, params || {});
-}
-export function sendInfoNtf(params) {
-  // 发送通知消息
-  const url = '/expert/sendInfoNtf';
-  return axios.post(BASE_URL + url, params || {});
-}
-
 export function getQuestionToExpert(params) {
   // 专家获取未分配的咨询
   const url = '/login-expert/getQuestionToExpert';
   return axios.post(BASE_URL + url, params || {});
 }
-export function getSourceInfoByUri(params) {
-  // 底部信息
-  const url = '/dmm/getSourceInfoByUri';
-  return axios.get(`/fatsapi/aosp-portal-web${url}`, { params } || {});
+
+export function getInQuestion(params) {
+  // 专家获取未分配的咨询
+  const url = '/consult-question/getInQuestion';
+  return axios.post(BASE_URL + url, params || {});
 }
 
 export function clearUnreadMsgCount(params) {
@@ -203,4 +165,23 @@ export function getUnreadMsgCount(params) {
   // 获取未读消息
   const url = `/login-expert/getUnreadMsgCount/${params.type}/${params.userId}`;
   return axios.get(BASE_URL + url, { isHideLoading: true });
+}
+
+export function send(params) {
+  // 发送单聊信息
+  const url = '/login-expert/send';
+  return axios.post(BASE_URL + url, params || {});
+}
+
+export function groupSend(params) {
+  // 发送群组信息
+  const url = '/login-expert/groupSend';
+  return axios.post(BASE_URL + url, params || {});
+}
+
+export function downloadinfo() {
+  // 获取版本号
+  const url = '/api-gateway/product/aosp-product/product/downloadInfo';
+
+  return axios.get(url, { params: { id: '4dcf25b4eda74b8f845cb7cd731df07f' } });
 }

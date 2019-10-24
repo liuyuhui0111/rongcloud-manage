@@ -1,30 +1,21 @@
 /* eslint-disable */
 const getters = {
-  token: state => state.token,
-  curUserData: state => {
-    if(state.curUserData.id){
-      return state.curUserData
-    }else if(window.sessionStorage.getItem('curUserData')){
-      return JSON.parse(window.sessionStorage.getItem('curUserData'))
-    }else{
-      return {};
-    }
-  },
-  
-  curTargetUserData: state => state.curTargetUserData,
-  curChangeUserData: state => state.curChangeUserData,
-  meslist: state => state.meslist,
-  userlist: state => state.userlist,
-  imtoken: (state) => {
-    return state.imtoken ? state.imtoken : window.sessionStorage.getItem('imtoken');
-  },
-  userId: (state) => {
-    return state.userId ? state.userId : window.sessionStorage.getItem('userId');
-  },
-  curTargetId: (state) => {
-    return state.curTargetId ? state.curTargetId : window.sessionStorage.getItem('curTargetId');
-  },
-  vuexShowMessage: state => state.vuexShowMessage,
+    token: state => state.token,
+    curUserData: state => state.curUserData,
+    curTargetUserData: state => state.curTargetUserData,
+    curChangeUserData: state => state.curChangeUserData,
+    
+    imtoken: (state) => {
+      return state.imtoken ? state.imtoken : window.sessionStorage.getItem('imtoken');
+    },
+    userId: (state) => {
+      return state.userId ? state.userId : window.sessionStorage.getItem('userId');
+    },
+    mesListData:(state) => {
+      return state.mesListData;
+    },
+    rongCloudData:state => state.rongcloud.rongCloudData,
+    // getDemoTitle: state => state.demo.title,
 };
 
 export default getters;

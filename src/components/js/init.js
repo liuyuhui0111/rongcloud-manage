@@ -67,7 +67,6 @@ export function sendMessage(targetIdList, messageData, isCreate, groupId) {
   // 发送消息  参数 目标列表 消息对象 content messageName 必须传
   // isCreate 是否自定义消息 isGroup  是否是群组
   // messageData：{content:{messageName:''}}
-  console.log('发送消息::::::::::', targetIdList, messageData, isCreate, groupId);
   return new Promise((resolve, reject) => {
     if (targetIdList.length < 1 || !messageData) {
     // 没有传发送对象  和消息内容
@@ -196,13 +195,13 @@ export function rongInit(params, addPromptInfo) {
         case RongIMLib.ConnectionStatus.CONNECTING:
         case 1:
           console.log('连接中');
-          addPromptInfo({ code: status, message: '连接中' });
+          addPromptInfo({ code: status, message: '' });
           break;
 
         case RongIMLib.ConnectionStatus.DISCONNECTED:
         case 2:
           console.log('当前用户主动断开链接');
-          addPromptInfo({ code: '-9999', message: '当前用户主动断开链接' });
+          addPromptInfo({ code: '-9999', message: '' });
           break;
 
         case RongIMLib.ConnectionStatus.NETWORK_UNAVAILABLE:

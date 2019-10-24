@@ -85,7 +85,7 @@ body .iconjieshuzixun:hover:before,
 .iconyizhuandan:before {
   content: "\e654";
 }
-body .iconzhuandan1:hover:before,
+body .iconzhuandan:hover:before,
 .iconzhuandan-xuanzhong:before {
   content: "\e64e";
 }

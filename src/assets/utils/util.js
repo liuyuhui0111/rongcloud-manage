@@ -97,16 +97,19 @@ function setTokenFn(token) {
   }
 }
 
-function encryption(str) {
-  // 字符串取前3 后4 中间4个***
+function getScrollTop() {
+  // 获取当前滚动条高度
+  return document.documentElement.scrollTop || document.body.scrollTop;
+}
 
-  let pre = str.substr(0, 3);
-  let end = '';
-  if (str.length > 7) {
-    end = str.substr(str.length - 3, str.length);
+function setScrollTop(top) {
+  // 设置当前滚动条高度
+  if (document.documentElement) {
+    document.documentElement.scrollTop = top;
+    document.body.scrollTop = top;
+  } else {
+    document.body.scrollTop = top;
   }
-
-  return `${pre}****${end}`;
 }
 
 export {
@@ -117,5 +120,6 @@ export {
   replaceCode,
   getTokenFn,
   setTokenFn,
-  encryption,
+  setScrollTop,
+  getScrollTop,
 };

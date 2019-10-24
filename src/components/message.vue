@@ -1,193 +1,61 @@
 <template>
-  <div v-if="isShowMessageBox"
-  @click="isShowEmoji=false;isShowquickmesBox=false;closeCofirmBox=false;"
-  class="message common-message">
-  <!-- 用户列表 -->
-  <div class="userlistbox">
-  <div class="userlist">
-    <div class="search-box">
-     <el-popover
-          placement="right"
+  <div v-if="curUserData.id" class="message common-message">
+
+
+    <div @click="isShowEmoji=false" class="messagebox">
+
+      <template v-if="isShowMessage">
+
+        <div class="headerbox">
+          <span class="title">{{curTargetUserData.name}}</span>
+          <span @click="hideMessage()" class="close"></span>
+           <!-- 结束 -->
+          <el-popover
+          placement="left"
+          width="168"
+          v-model="closeCofirmBox"
           trigger="click">
-            <!-- 个人信息 -->
-            <div class="useraccount">
-              <span class="title">{{curUserData.name}}</span>
-              <p>{{curUserData.account}}</p>
+          <div class="close-confirm-box">
+            <p>确定要结束咨询吗？</p>
+            <div class="btnbox">
+              <span @click="closeCofirmBox=false" class="cancel">取消</span>
+              <span @click="endEvaluateFn()" class="sub">确定</span>
             </div>
-      <img slot="reference" :src="userInfo.icon" alt="">
-      </el-popover>
-      <div @keyup.enter="SearchPageFn" class="inpbox">
-        <span @click="SearchPageFn" class="iconfont iconsousuo"></span>
-        <div class="inp">
-        <el-input v-model="searchVal"
-        placeholder=""></el-input>
+          </div>
+          <span slot="reference"
+          class="icon-close">结束咨询</span>
+          </el-popover>
         </div>
-      </div>
-
-    </div>
-    <div class="list common-scroll-bar">
-      <div v-for="(item,index) in userlist"
-      @click="checkUser(item,index)"
-      :data="item.newmes"
-      class="item userlistItem"
-      :class="[
-      {on:curMessageIndex==index},
-      {stop:item.type==1},
-      {newmes:item.newmes==1},
-      {group:item.exchange == 1 && item.toExpertId != curUserData.id},
-      {exchange:item.exchange == 1},
-      {gray1: item.status==2},
-
-      ]"
-      :key="index">
-        <div class="imgbox">
-        <span class="qtype" v-if="item.qtype == '0' && item.status==2">问题未分类</span>
-        <div :class="{gray: item.status==2}">
-          <img :src="item.icon" alt="">
-          <img v-if="item.exchange == 1
-          && item.toExpertId != curUserData.id"
-          :src="item.fromIcon"
-          alt="" class="expertfrom">
-          <img v-if="item.exchange == 1
-          && item.toExpertId != curUserData.id"
-          :src="item.toIcon"
-          alt="" class="expertto">
-        </div>
-        </div>
-        <div :class="{gray: item.status==2}" class="intro">
-          <p class="namebox">
-            <span class="name">{{encryptionFn(item.name)}}</span>
-            <span class="time">{{getTimeFn(item,'2')}}</span>
-          </p>
-          <p class="idbox">
-            <span class="mesid">咨询单id:{{item.code}}</span>
-            <span v-if="item.exchange == 0
-            || (item.exchange == 1
-            && item.fromExpertId != curUserData.id)"
-            class="iconfont iconzixunzhong"></span>
-            <span v-if="item.exchange == 1
-            && item.fromExpertId == curUserData.id"
-            class="iconfont iconzixunzhong"></span>
-          </p>
-        </div>
-      </div >
-    </div>
-
-  </div>
-  </div>
-  <!-- 聊天窗口 -->
-  <template v-if="userlist.length>0">
-    <div v-for="(uitem,uindex) in userlist"
-    :key="uindex"
-
-      v-show="uindex === curMessageIndex"
-      class="messagebox">
-
-
-      <div class="headerbox">
-      <template v-if="curTargetUserData.userType == 'P'
-      || curTargetUserData.userType == 'C'">
-      <el-popover
-          placement="bottom"
-          trigger="click">
-            <!-- 个人信息 -->
-            <div class="useraccount">
-              <span v-if="curTargetUserData.userType == 'P'" class="title">个人账户</span>
-              <span v-if="curTargetUserData.userType == 'C'" class="title">企业账户</span>
-              <p v-if="curTargetUserData.userType == 'C'">
-              所属企业：{{curTargetUserData.userCompany}}
-              </p>
-              <p v-if="curTargetUserData.userType == 'C'">
-              所属行业：{{curTargetUserData.companyTrade}}</p>
-              <p v-if="curTargetUserData.userType == 'P'">
-              所属地区：{{curTargetUserData.userCity}}</p>
-              <p v-if="curTargetUserData.userType == 'C'">
-              所属地区：{{curTargetUserData.companyLocation}}</p>
-            </div>
-          <div slot="reference" class="title">
-
-            <span class="icon"></span>
-
-          <span class="name">
-          {{encryptionFn(curTargetUserData.name)}}咨询中
-          </span>
-        </div>
-        </el-popover>
-        </template>
-        <template v-else>
-          <div class="title">
-
-            <span class="icon"></span>
-
-          <span class="name">
-          {{curTargetUserData.name}}咨询中
-          </span>
-        </div>
-        </template>
-        <div class="time">已咨询{{getTimeFn(curTargetUserData.duration,'1')}}</div>
-        <div class="btns">
-        <span @click="hideMessage" class="close">-</span>
-        </div>
-      </div>
       <!-- 聊天展示区域 -->
-      <div
+      <div id="meslist"
       class="meslist common-scroll-bar">
 
-        <div
-        v-for="(item,index) in meslist[uitem.mesid]"
+
+        <!-- 系统提示盒子 -->
+        <div :personnNum="mesListData[0].personnNum"
+        v-show="mesListData[0].personnNum>0" class="systemtips">
+          <p>
+              排队<span>{{mesListData[0].personnNum}}</span>人，请耐心等候专家回复
+          </p>
+        </div>
+        <!-- 系统提示占位盒子 -->
+        <div v-show="mesListData[0].personnNum>0
+        && mesListData[0].list.length>0"
+        class="h34"></div>
+        <template v-if="mesListData[0].list.length>0">
+        <div v-for="(item,index) in mesListData[0].list"
+        :data="item.fromUserId"
         class="item"
         :class="[
-          {on:item.senderUserId==curUserData.id || item.fromUserId==curUserData.id},
-          {system:item.objectName == 'RC:InfoNtf'
-          },
+          {on:item.senderUserId==userId || item.fromUserId==userId},
+          {system:item.objectName == 'RC:InfoNtf'},
           {create:item.content.type == '0001'},
         ]"
-        :key="index"
-        :ref="index">
-          <div v-if="item.content.extra
-          && item.objectName != 'RC:InfoNtf'
-          && item.objectName !=='RC:GrpNtf'
-          && item.objectName != 'RC:DxhyMsg'" class="user">
+        :key="index">
+          <div v-if="item.content.extra &&
+          item.objectName != 'RC:InfoNtf'" class="user">
             <img :src="item.content.extra.icon" alt="">
           </div>
-          <div v-if="item.content.contentType =='MSG_LOG'" class="user">
-            <img :src="item.content.extra.icon" alt="">
-          </div>
-
-          <template v-if="item.objectName == 'RC:DxhyMsg'">
-              <div class="msg-user-source msgbox"
-              v-if="item.content.contentType =='MSG_USER_SOURCE'">
-                <!-- 来源 -->
-                <div class="mesitem">用户来源：{{item.content.content.fromName}}</div>
-                <div v-if="item.content.content
-                && item.content.content.fromContent
-                && item.content.content.fromAddress"
-                @click="openWindow(item.content.content.fromAddress)"
-                class="mesitem pointer">当前正在浏览的页面：
-                <a class="noline"
-                href="javascript:">{{item.content.content.fromContent}}</a>
-                </div>
-              </div>
-
-               <div class="msg-evaluate msgbox"
-               v-if="item.content.contentType =='MSG_EVALUATE'">
-                <!-- 查看评价 -->
-                <span @click="showEvaluateFn(item)" class="btn-sub">查看评价</span>
-              </div>
-              <!-- eslint-disable -->
-              <div class="mes meslog" @click="showMesLog(item.content)" 
-              v-if="item.content.contentType =='MSG_LOG'">
-               <div class="logtitle"> {{item.content.title}}</div>
-                <p class="ellipsis"
-                v-for="(contentItem,contentIndex) in item.content.content.slice(1,4)"
-                :key="contentIndex">
-                {{contentItem.content.extra.name}} : {{contentItem.content.content}}
-                </p>
-                <div class="pointer">查看聊天记录</div>
-                <span class="after"></span>
-              </div>
-              <!-- eslint-enable -->
-          </template>
 
 
           <template v-if="item.objectName == 'RC:InfoNtf'">
@@ -199,10 +67,24 @@
 
           </template>
           <div class="mesbox">
-          <!-- <div v-if="item.content.user &&
-          item.content.messageName != 'InformationNotificationMessage'
-          && item.objectName != 'RC:DxhyMsg'"
-          class="name">{{item.content.user.name}}</div> -->
+          <div v-if="item.content.extra &&
+          item.objectName != 'RC:InfoNtf'"
+          class="name">{{item.content.extra.name}}</div>
+
+
+          <template v-if="item.objectName == 'RC:DxhyMsg'
+          && item.content.contentType =='MSG_END_REQUEST'">
+          <!-- 文本消息 -->
+            <div class="mes">
+            <p>是否可以结束咨询？</p>
+            <span class="after"></span>
+            </div>
+            <div class="closeQuestion-btns">
+              <span @click="endEvaluateFn()" class="yes">可以</span>
+              <span @click="sendQuestion($event,'我还有问题')" class="no">我还有问题</span>
+            </div>
+          </template>
+
 
           <template v-if="item.objectName == 'RC:TxtMsg'">
           <!-- 文本消息 -->
@@ -232,117 +114,56 @@
               <span class="after"></span>
             </div>
           </template>
-
-
           </div>
         </div >
-        <div class="h34"></div>
-      </div>
-
-      <!-- 快捷回复 -->
-      <div v-show="isShowquickmesBox"
-      class="quickmes-box common-scroll-bar">
-        <div v-for="(item,index) in getCommonPhrasesListRes"
-        class="item"
-        @click.stop="quickmes(item)"
-        :key="index">
-        {{item.name}}
-        </div >
-      </div>
-
-      <!-- toast提示框 已转单 问题已分类 -->
-      <div v-show="isShowToast" class="toast">
-       <p>{{toaststr}}</p>
+        </template>
+        <!-- 显示评分消息 -->
+          <div v-show="isShowRateMesBox" class="ratemesbox">
+            <rate @success="dialogCompentVisibleSub"></rate>
+          </div>
       </div>
 
       <!-- 发送区域 -->
       <div class="sendbox">
-        <div v-if="(userlist[curMessageIndex].exchange == 1 &&
-        userlist[curMessageIndex].fromExpertId == curUserData.id)
-        || userlist[curMessageIndex].status==2" class="hidemask">
+        <div v-show="hidemask" class="hidemask">
           <!-- 禁用聊天遮罩层 -->
-         <!--  <div
-          @click="showQuestionFn()"
-          v-if="userlist[curMessageIndex].status==2
-          && userlist[curMessageIndex].qtype == '0'"
-          class="toast pointer"><p>已结束咨询，点击去分类</p></div> -->
-
-          <!-- <div v-if="userlist[curMessageIndex].status==2
-          && userlist[curMessageIndex].qtype == '1'"
-          class="toast"><p>已结束咨询</p></div> -->
-
-          <div v-if="userlist[curMessageIndex].exchange == 1
-          &&userlist[curMessageIndex].fromExpertId == curUserData.id" class="toast">
-          <!-- 转单标志为1 且当前用户id 等与转单id  -->
-           <p>已转单给{{userlist[curMessageIndex].consultExpert.name}}</p>
-          </div>
-
+          <span class="btn-sub" @click="again()">再次咨询</span>
         </div>
         <div class="btns">
-          <span @click.stop="isShowquickmesBox=false;
-          closeCofirmBox=false;
-          emojiClick();"
+          <span @click.stop="emojiClick"
           title="表情"
           class="iconfont iconbiaoqing"></span>
-
           <label for="picture">
           <span title="上传图片"
           class="iconfont iconfasongtupian"></span></label>
+          <input style="display:none;"
+          @change="fileChange($event,'img')"
+          accept="image/jpeg,image/jpg,image/gif,image/png,image/bmp"
+          ref="picture"
+          type="file" id="picture" name="picture">
 
+
+          <input
+          @change="fileChange($event,'file')"
+          ref="file"
+          style="display:none;" type="file" id="file" name="file">
           <label for="file">
           <span title="上传文件"
           class="iconfont iconfasongwenjian"></span>
         </label>
 
-      <!--     <span @click="upload('img')" class="iconfont iconfasongtupian"></span>
+          <!-- 数据授权 -->
+          <!--  <el-popover
+          placement="top"
+          width="60"
+          trigger="hover">
+          <span class="popover">数据授权</span>
+          <span @click="requestAuthFn" slot="reference" class="iconfont iconzhuandan1"></span>
+          </el-popover> -->
 
-
-          <span @click="upload('file')" class="iconfont iconfasongwenjian"></span> -->
-
-
-          <!-- 快捷回复 -->
-
-          <span title="快捷回复"
-          @click.stop="isShowEmoji=false;
-          closeCofirmBox=false;
-          isShowquickmesBox = !isShowquickmesBox"
-          class="iconfont iconkuaijiehuifu"></span>
-
-          <!-- 问题分类 -->
-          <span
-          @click="showQuestionFn()"
-          title="问题分类"
-          :class="{on:userlist[curMessageIndex].status==2
-          && userlist[curMessageIndex].qtype == '0'}"
-          class="iconfont iconwentifenlei"></span>
-
-          <!-- 转单 -->
-          <span @click="changeExpert()"
-          title="转单"
-          class="iconfont iconzhuandan1"></span>
-
-           <!-- 结束 -->
-
-
-          <div class="re">
-            <div v-show="closeCofirmBox" class="close-confirm-box dialog-box-base">
-              <div class="box">
-                <p>询问用户是否可以结束咨询？</p>
-                <div class="btnbox">
-                  <span @click.stop="closeCofirmBox=false;" class="cancel">取消</span>
-                  <span @click.stop="proposeEndConsultFn()" class="sub">确定</span>
-                </div>
-              </div>
-            </div>
-          <span @click.stop="isShowEmoji=false;
-          isShowquickmesBox=false;
-          closeCofirmBox=!closeCofirmBox"
-          title="结束咨询"
-          class="iconfont iconjieshuzixun"></span>
-          </div>
 
         </div>
-        <div class="inp">
+        <div class="inp h60">
           <div v-if="isShowEmoji && emojiList.length>0"
           @click.stop
           class="emojibox">
@@ -351,7 +172,7 @@
              :key="index" v-html="item.node.outerHTML">
              </div >
           </div>
-          <div @keyup.enter="startSendMes(1)">
+          <div @keyup.enter="startSendMes()">
             <el-input
 
             type="textarea"
@@ -365,128 +186,115 @@
           <!-- <textarea v-model="mesData" placeholder="说点什么吧"></textarea> -->
         </div>
       </div>
-      <div class="btn-sub sub" @click="startSendMes(1)">发送</div>
+      <div class="btn-sub sub" @click="startSendMes()">发送</div>
 
-
-      <!-- 结束会话 -->
-
-
-      <!-- 上传压缩相关隐藏dom -->
-      <input style="display:none;"
-          @change="fileChange($event,'img')"
-          accept="image/jpeg,image/jpg,image/gif,image/png,image/bmp"
-          ref="picture"
-          type="file" id="picture" name="picture">
-          <input
-          @change="fileChange($event,'file')"
-          ref="file"
-          style="display:none;" type="file" id="file" name="file">
-      <canvas id="canvas" style="display:none;"></canvas>
-
-    </div>
-  </template>
-  <template v-else>
-    <div class="messagebox">
-      <!-- 还没有用 -->
-       <div class="headerbox">
-
-          <div class="title">
-
-
-          <span class="name">
-          暂无咨询消息
-          </span>
-        </div>
-        <div class="time"></div>
-        <div class="btns">
-        <span @click="hideMessage" class="close">-</span>
-        </div>
+      </template>
+      <!-- 问题弹窗 -->
+      <div v-show="dialogQuestion" class="dialog-question">
+          <div class="dialog-header">
+            <span>优税专家</span>
+            <p>财税问题·专业解答</p>
+          </div>
+          <div class="dialog-content">
+            <p>请描述您要向专家咨询的问题，以便专家为您详细解答。</p>
+            <div class="inp">
+            <el-input
+            type="textarea"
+            placeholder="请输入内容"
+            v-model="getExpertQuestionParam.question_desc"
+            rows="10"
+            resize="none"
+            maxlength="150"
+            show-word-limit
+            ></el-input>
+            </div>
+            <div class="btns">
+              <span @click="hideMessage()" class="btn-sub btn-cancel">取消</span>
+              <span @click="getExpertQuestionFn()" class="btn-sub">发送</span>
+            </div>
+          </div>
       </div>
-    </div>
-  </template>
 
-    <!-- 问题分类弹窗 -->
-    <template v-if="questionStr">
-      <question @back="isShowQuestion=false;"
-      :questionStr="questionStr"
-      :mesid="curid"
-      @success="questionSuccess"
-      v-show="isShowQuestion"></question>
-    </template>
-
-    <!-- 聊天记录 -->
-    <template v-if="isShowMeslog">
-      <meslog @back="isShowMeslog=false;"
-      :mesid="curid"
-      :meslogList = "meslogList"></meslog>
-    </template>
-
-    <!-- 转单专家列表弹窗 -->
-    <template v-if="isShowExpect">
-    <expertlist
-    :mesid="curid"
-    :expertid="userInfo.id"
-    :targetId="targetId"
-    @success="changeExpertSuccess"
-    @back="isShowExpect=false;"></expertlist>
-    </template>
-
-    <!-- 评价弹窗 -->
-      <div v-if="dialogCompentVisible" class="dialog-mask">
-        <!-- 评价弹窗弹窗 -->
-        <div class="dialog-box-componet">
+      <div v-show="dialogRightVisible" class="dialog-mask">
+        <!-- 无权益填写个人信息弹窗 -->
+        <div class="dialog-box">
         <el-dialog title=""
         :modal-append-to-body="boolFalse"
+        :close-on-click-modal="boolFalse"
+        @close="hideMessage()"
         :modal="boolFalse"
-        :visible.sync="dialogCompentVisible">
-           <div class="title">此次咨询服务用户对您的评价是{{rateParam.rateVal}}分</div>
-           <div class="ratebox">
-              <div class="label">{{rateMap[rateParam.rateVal]}}</div>
-              <div class="rate">
-                <el-rate
-                  v-model="rateParam.rateVal"
-                  disabled
-                  :colors="colors">
-                </el-rate>
+        :visible.sync="dialogRightVisible">
+            <p class="title">您的免费权益已全部消耗，成为VIP会员继续免费咨询</p>
+            <p class="tip">留下您的信息，工作人员将在24小时内联系您</p>
+            <div class="inpbox">
+              <div class="name">
+                <el-input
+                  placeholder="请输入姓名"
+                  v-model="userParam.name">
+                </el-input>
               </div>
-           </div>
-           <div class="tagbox">
-             <div v-for="(item,index) in rateTagMap"
-             class="item"
-             v-show="!isShowTag(item)"
-             :class="{on:item.active}"
-             :key="index">
-              {{item.text}}
-             </div >
-           </div>
-           <div class="inp">
-            评价内容：{{rateParam.rateMes}}
+              <div class="tel">
+                <el-input
+                  placeholder="请输入电话"
+                  v-model="userParam.tel">
+                </el-input>
+              </div>
+            </div>
+            <span @click="addVipNoticeFn" class="btn-sub auto">提交</span>
 
-           </div>
-
+            <p class="custom-tel">您也可以拨打电话{{tel}}</p>
         </el-dialog>
         </div>
       </div>
+
+
+      <!-- 评价弹窗 -->
+      <div v-if="dialogCompentVisible" class="dialog-mask">
+        <!-- 评价弹窗弹窗 -->
+        <div class="dialog-box-componet-dialog">
+        <el-dialog title=""
+        :modal-append-to-body="boolFalse"
+        :close-on-click-modal="boolFalse"
+        :modal="boolFalse"
+        :visible.sync="dialogCompentVisible">
+          <rate @success="dialogCompentVisibleSub"></rate>
+        </el-dialog>
+        </div>
+      </div>
+      <!-- 遮罩层 -->
+      <div v-show="isShowMask" class="mask"></div>
+      <!-- 上传压缩相关隐藏dom -->
+
+      <canvas id="canvas" style="display:none;"></canvas>
+
+    </div>
+
+
   </div>
 </template>
 <script>
 
-import message from './message';
-
+/*eslint-disable*/ 
+import message from './message'
 export default message;
-
 </script>
 <style>
   .el-popover{
     min-width: 50px;
   }
+  .common-message .el-dialog__wrapper{
+    display: flex;
+    align-items: center;
+  }
   .common-message .inp .el-textarea__inner{
     border: none;
+    
   }
-  .common-message .closeCofirmBox{
-    position: absolute;
-    bottom: 100px;
-    left: 120px;
+  .common-message .inp.h60 .el-textarea__inner{
+    overflow-y: auto;
+    height: 80px;
+    min-height: 80px;
+    font-size:12px;
   }
   .el-message-box__message p{
     text-align: center;
@@ -531,7 +339,7 @@ export default message;
     width: 400px;
     /*box-sizing:border-box;*/
   }
-  .common-message .dialog-box-componet .el-dialog{
+  .common-message .dialog-box-componet-dialog .el-dialog{
     width: 500px;
     box-sizing:border-box;
   }
@@ -543,394 +351,68 @@ export default message;
   .el-dialog__wrapper{
     overflow: hidden;
   }
-   .common-layout-index .el-input__inner{
-    background: none;
-color: #333;
-border: none;
-outline: none;
-height: 28px;
-line-height: 28px;
-padding: 0 0 0 0px;
-  }
 
-.common-message .messagebox .headerbox .title .icon{
-  width: 15px;
-  height: 15px;
-  background: url('./img/icon-user.png') no-repeat center center;
-  -webkit-background-size: 100% 100%;
-  background-size: 100% 100%;
-  border-radius: 100%;
-  margin-right: 9px;
-  cursor: pointer;
-  display: block;
-}
 
 </style>
 <style scoped>
-/*个人信息*/
-a.noline{
-  text-decoration: none;
-}
-.useraccount{
-  padding: 10px 20px;
-}
-/*自定义弹框白色三角*/
-.dialog-box-base .box{
-border: 1px solid #D8D8D8;
-border-radius: 2px;
-display: block;
-width: 100%;
-height: 100%;
-z-index: 0;
-}
-.dialog-box-base:after{
-  content: "";
-  position: absolute;
-   width: 6px;
-  height: 6px;
-  background: #fff;
-  z-index: 2;
-  bottom: -5px;
-  transform: rotate(-45deg);
-  border-left: 1px solid #D8D8D8;
-  border-bottom: 1px solid #D8D8D8;
-  left: 50%;
-}
-/*自定义消息*/
-.msgbox {
-  width: 100%;
-}
-.msgbox .mesitem{
-  display: block;
-  width: 85%;
-  margin: 12px auto;
-  background: #EDEDED;
-border-radius: 4px;
-font-size: 12px;
-color: #333333;
-text-align: center;
-padding: 8px;
-line-height: 18px;
-}
-/*toast提示信息*/
-.toast{
-  position: absolute;
-  z-index: 10;
-  background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  bottom: 110px;
-}
-.toast p{
-  display: inline-block;
-  padding: 8px 23px 8px 40px;
-  font-size: 12px;
-color: #333333;
-line-height: 16px;
-
-border-radius: 4px;
-background: url('./img/success.png') no-repeat 23px center;
-background-size: 14px 14px;
-background-color: #EBF9E4;
-}
-/*消息列表*/
-.quickmes-box{
-  position: absolute;
-  z-index: 11;
-  background: #fff;
-  width: 360px;
-  height: 146px;
-  overflow-y: auto;
-  bottom: 101px;
-  left: 30px;
-  background: #F9F9F9;
-border: 1px solid #D9D9D9;
-border-radius: 4px 4px 0 0;
-box-sizing:border-box;
-padding: 20px 16px 0 16px;
-font-size: 14px;
-/*display: flex;*/
-/*flex-wrap: wrap;*/
-}
-.quickmes-box .item{
-  line-height: 20px;
-  padding-bottom: 10px;
-  cursor: pointer;
-  color: #666666;
-  cursor: pointer;
-}
-.quickmes-box .item:hover{
-  color: #33C8DF;
-}
-/*用户列表*/
-/*已分类*/
-.userlistbox .qtype{
-  position: absolute;
-  font-size: 10px;
-color: #F56C6C;
-background: #FFEAEA;
-border-radius: 4px;
-z-index: 2;
-padding: 0 2px;
-left: 0px;
-right: 0;
-text-align: center;
-}
-
- .userlistbox .iconsousuo{
-    color: #0898ad;
-    cursor: pointer;
-    font-size: 16px;
-    position: relative;
-    top: 2px\9\0;
-  }
-  .userlistbox .iconzixunzhong{
-    color: #09bb0c;
-  }
-  .userlistbox .gray .iconzixunzhong{
-    color: #999;
-  }
-  .userlistbox .search-box .inpbox{
-    background: #86E3F1;
-    border-radius: 2px;
-    border-radius: 2px;
-    display: flex;
-    box-sizing:border-box;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 10px;
-    font-size: 0px;
-    line-height: 28px;
-  }
-  .userlistbox .search-box .inpbox .inp{
-    display: -webkit-flex;
-    display: -moz-flex;
-    display: -ms-flex;
-    display: -o-flex;
-    display: flex;
-    align-items: center;
-  }
-
-  .userlistbox .userlist{
-    width: 280px;
-    height: 100%;
-    position: absolute;
-    display: block;
-    box-sizing:border-box;
-    left: 0;
-    top: 0;
-    background: #fff;
-    border-right:1px solid #e7e7e7;
-  }
-  .userlistbox .userlist .item{
-    display: block;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 62px;
-    box-sizing:border-box;
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid #e7e7e7;
-    position: relative;
-  }
-  .ie10 .userlist .item.gray1,
-  .ie11 .userlist .item.gray1{
-    background-color: #eee;
-  }
-  .userlistbox .userlist .item.on{
-    background-color: #EDEDED;
-  }
-  .userlistbox .userlist .item.exchange:after{
-    position: absolute;
-    content: "";
-    width: 24px;
-    height: 24px;
-    right: 0;
-    top: 0;
-    background: url('./img/icon-bzd.png') no-repeat center center;
-    -webkit-background-size: 24px 24px;
-    background-size: 24px 24px;
-  }
-  .userlistbox .userlist .item .imgbox{
-    width: 74px;
-    height: 44px;
-    overflow: hidden;
-    margin-right: 10px;
-    position: relative;
-  }
-   .userlistbox .userlist .item .imgbox img{
-    width: 44px;
-    border-radius: 100%;
-    position: absolute;
-    left: 10px;
-   }
-   .userlistbox .userlist .item.group .imgbox img{
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    border-radius: 100%;
-    left: 20px;
-   }
-   .userlistbox .userlist .item.group .imgbox img.expertto{
-    top: 20px;
-    left: 8px;
-   }
-   .userlistbox .userlist .item.group .imgbox img.expertfrom{
-    top: 20px;
-    left: 34px;
-   }
-  .userlistbox .userlist .item .intro{
-    width: 206px;
-    position: relative;
-  }
-  .userlistbox .userlist .item.newmes .intro:after{
-    content: "";
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: #f00;
-    border-radius: 100%;
-    right: 0px;
-    bottom: 10px;
-  }
-  .userlistbox .userlist .item .intro p{
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #333;
-  }
-  .userlistbox .userlist .item .intro.gray p{
-    color: inherit;
-  }
-  .userlistbox .userlist .item .intro .name{
-    font-size: 14px;
-  }
-  .userlistbox .userlist .item .intro .time{
-    color: #C0C0C0;
-  }
-  .userlistbox .userlist .item .intro .mesid{
-    color: #666666;
-  }
-  .userlistbox .userlist .list{
-    position: absolute;
-    top: 50px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-  }
-  .userlistbox .iframe-box{
-    height: 100%;
-    left: 280px;
-    top: 0;
-    right: 0;
-    display: block;
-    box-sizing:border-box;
-    position: absolute;
-  }
-  .userlistbox .search-box{
-    position: absolute;
-    width: 100%;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    box-sizing:border-box;
-    background: #33C8DF;
-  }
-  .userlistbox .search-box img{
-    width: 36px;
-    height: 36px;
-    border-radius: 100%;
-    display: block;
-    margin-right: 12px;
-  }
 /*是否可以结束咨询提示*/
-.closeQuestion{
-  background: #FFFFFF;
-border: 1px solid #D8D8D8;
-border-radius: 4px;
-border-radius: 4px;
-box-sizing:border-box;
-padding: 16px;
-text-align: left;
-font-size: 13px;
-color: #333;
-}
-.closeQuestion p{
-  margin-bottom: 16px;
-}
-.closeQuestion .btns{
+.closeQuestion-btns{
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 10px;
 }
-.closeQuestion .btns span{
-  padding: 5px 20px;
+.closeQuestion-btns span{
   display: block;
   border: 1px solid #33C8DF;
-border-radius: 4px;
-border-radius: 4px;
-text-align: center;
-font-size: 14px;
-color: #33C8DF;
-box-sizing:border-box;
-cursor: pointer;
-}
-.closeQuestion .btns .yes{
-  margin-right: 10px;
-}
-/*评价*/
-.dialog-box-componet .title{
-  font-size: 18px;
-color: #333333;
-font-weight: bold;
-margin-bottom: 24px;
-text-align: center;
-}
-.dialog-box-componet .ratebox{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  margin-bottom: 16px;
-}
-.dialog-box-componet .rate{
-  margin-right: 25px;
-}
-.dialog-box-componet .tagbox{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.dialog-box-componet .tagbox .item{
-  display: block;
-   height: 25px;
-  line-height: 25px;
+  color: #33C8DF;
   text-align: center;
+  height: 30px;
+  line-height: 30px;
+  padding:0 15px;
+  border-radius: 15px;
+  margin-right: 20px;
+  cursor: pointer;
+}
+/* 结束咨询 */
+.icon-close{
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  width: 80px;
+  height: 27px;
+  background: #FD8606;
+  border-radius: 30px 0 0 30px;
+  right: 0;
+  top: 74px;
+  z-index: 8;
+  color: #fff;
+  text-align: center;
+  line-height: 27px;
+}
+/* .icon-close:hover{
+  opacity: 0.1;
+} */
+/* 重写遮罩层背景 */
+.mask{
+  background: rgba(0,0,0,0.3);
+  z-index: 8;
+  
+}
+/*消息评分*/
+.ratemesbox{
+  width: 328px;
+  height: 345px;
+  position: relative;
   border: 1px solid #D8D8D8;
 border-radius: 4px;
 border-radius: 4px;
-font-size: 12px;
-color: #666666;
-margin-right: 8px;
-cursor: pointer;
-padding: 0 10px;
+float: left;
+padding: 16px;
+margin: 16px;
 }
-.dialog-box-componet .tagbox .item.on{
-  color: #33C8DF;
-  border-color: #33C8DF;
-}
-.dialog-box-componet .inp{
-margin-top: 16px;
-margin-bottom: 32px;
-}
+
+
 
 /*没有权益提交用户信息*/
   .dialog-box .title{
@@ -954,11 +436,10 @@ margin-bottom: 32px;
   }
 /*弹窗*/
 .dialog-mask{
-  position: fixed;
-  background: rgba(0,0,0,0.6);
+  position: absolute;
   top: 0;
-  left: -10px;
-  right: -10px;
+  left: 0;
+  right: 0;
   bottom: -10%;
   height: 110%;
   z-index: 100;
@@ -969,36 +450,44 @@ margin-bottom: 32px;
 /*问题弹窗*/
 .dialog-question{
   position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: #fff;
-  left: 0;
-  top: 0;
-  z-index: 9;
+    width: 90%;
+    height: 74%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #F8FEFF;
+    left: 5%;
+    top: 13%;
+    z-index: 9;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding: 0 40px;
 }
 .dialog-header{
-  height: 50px;
-  line-height: 50px;
-  padding: 0 15px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 1px 0 0 rgba(0,0,0,0.15);
-  font-size: 14px;
-color: #333333;
-font-weight: bold;
+  padding: 18px 0;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px dashed #d5d5d5;
+  color: #33C8DF;
+  margin-top: 12px;
+}
+.dialog-header span{
+  font-size: 22px;
+}
+.dialog-header p{
+  font-size: 10px;
 }
 .dialog-content{
-  width: 85%;
+  width: 100%;
   margin: 0 auto;
 }
 .dialog-content p{
-  padding-top: 72px;
+  padding-top: 20px;
   padding-bottom: 16px;
   font-size: 14px;
   color: #333333;
+}
+.dialog-content .inp{
+  border: 1px solid #D8D8D8;
 }
 
 
@@ -1015,16 +504,22 @@ font-weight: bold;
 .systemtips{
   position: fixed;
   width: 100%;
-  height: 32px;
-  line-height: 32px;
-  text-align: center;
   font-size: 12px;
   color: #333333;
-  background: #FFFBE6;
   z-index: 10;
 }
+.systemtips p{
+  display: block;
+  width: 280px;
+  height: 26px;
+  line-height: 26px;
+  background: #FFF0D2;
+  border-radius: 4px;
+  margin: 6px auto;
+  text-align: center;
+}
 .h34{
-  height: 32px;
+  height: 34px;
 }
 .systemtips span{
   color: #e6a23c;
@@ -1040,9 +535,6 @@ font-weight: bold;
   left: 0;
   right: 0;
   bottom: 0;
-  color: #000;
-  text-align: center;
-  padding-top: 40px;
 }
 .emojibox{
     position: absolute;
@@ -1055,31 +547,23 @@ font-weight: bold;
   display: inline-block;
 }
 /*确认关闭*/
-.re{
-  position: relative;
-}
-
 .close-confirm-box{
-  width: 204px;
+  width: 164px;
   height: 98px;
 border-radius: 2px;
 text-align: center;
 font-size: 12px;
 color: #333;
-position: absolute;
-left: -90px;
-bottom: 35px;
-background: #fff;
 }
 .close-confirm-box p{
   padding-top: 24px;
+
 }
 .close-confirm-box .btnbox{
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 16px;
-  font-size: 12px;
 }
 .close-confirm-box .btnbox span{
   display: block;
@@ -1097,14 +581,6 @@ cursor: pointer;
   background: #fff;
   margin-right: 20px;
 }
-.messagebox .sendbox .btns .close-confirm-box span:hover,
-.messagebox .sendbox .btns .close-confirm-box span{
-  font-size: 12px;
-  padding: 2px 12px;
-}
-.messagebox .sendbox .btns .close-confirm-box span.sub:hover{
-  color:#fff;
-}
 .close-confirm-box .btnbox span.sub{
   background: #33C8DF;
   color: #fff;
@@ -1113,34 +589,39 @@ cursor: pointer;
   position: absolute;
   bottom: 0;
   right: 0;
-  left: 280px;
   background: #fff;
+  width: 100%;
   height: 100%;
   box-shadow: 0 1px 0 0 rgba(0,0,0,0.15);
   z-index: 99;
 }
 .messagebox .headerbox{
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: #FFFFFF;
-  box-shadow: 0 1px 0 0 rgba(0,0,0,0.15);
+  height: 44px;
+  line-height: 44px;
+  overflow: hidden;
+  background: #33C8DF;
+  color: #fff;
   font-size: 14px;
-  color: #333333;
-  padding: 0 16px;
-  font-weight: bold;
-  border-bottom: 1px solid #D8D8D8;
-  box-sizing:border-box;
 }
-.messagebox .headerbox .btns{
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+.messagebox .headerbox .title{
+  text-align: left;
+  padding-left: 16px;
+}
+.messagebox .headerbox .close{
+  width: 44px;
+  height: 44px;
+  float: right;
+  cursor: pointer;
+  position: relative;
+}
+.messagebox .headerbox .close:after{
+  content: "";
   position: absolute;
-  right: 16px;
+  width: 36%;
+  height: 2px;
+  background: #fff;
+  left: 26%;
+  top: 21px;
 }
 .dialog-header .close,
 .messagebox .headerbox .btns span{
@@ -1154,24 +635,8 @@ cursor: pointer;
   color: #fff;
   border-radius: 100%;
 }
-.messagebox .headerbox .title{
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-right: 62px;
-  cursor: pointer;
-}
-.messagebox .headerbox .time{
-  font-size: 12px;
-color: #666666;
-font-weight: normal;
-display: flex;
-align-items: center;
-}
-
-
 .messagebox .sendbox{
-  height: 100px;
+  height: 130px;
   bottom: 0;
   right: 0;
   position: absolute;
@@ -1184,6 +649,7 @@ align-items: center;
 .messagebox .sendbox .btns{
   height: 30px;
   display: flex;
+  padding-left: 8px;
 }
 .messagebox .sendbox .btns span{
   display: block;
@@ -1193,14 +659,8 @@ align-items: center;
   cursor: pointer;
   line-height: 30px;
 }
-.messagebox .sendbox .btns span.iconwentifenlei,
-.messagebox .sendbox .btns span.iconzixunzhong,
 .messagebox .sendbox .btns span.iconzhuandan1{
   font-size: 17px;
-}
-
-.messagebox .sendbox .btns span.iconwentifenlei.on{
-  z-index: 111;
 }
 .messagebox .sendbox .btns span:hover{
   color: #33C8DF;
@@ -1209,14 +669,14 @@ align-items: center;
 .messagebox textarea{
   width: 100%;
   border: none;
-  height: 70px;
+  min-height: 70px;
   outline: none;
   box-sizing:border-box;
   padding: 0 15px 15px 15px;
   resize: none;
 }
+
 .messagebox .btn-sub{
-  margin: 0 auto;
   display: block;
    width: 68px;
   height: 30px;
@@ -1227,16 +687,30 @@ align-items: center;
   background: #33C8DF;
   cursor: pointer;
   border-radius: 4px;
+  margin-right: 20px;
+  border: 1px solid #33C8DF;
 }
-.dialog-content .btn-sub{
-  margin-top: 40px;
+.messagebox .sendbox .btn-sub{
+  margin: 50px auto;
 }
-.common-message .dialog-box .btn-sub{
-  margin: 24px auto;
+.messagebox .btn-sub.auto{
+  margin: 10px auto 0 auto;
 }
-.common-message .dialog-box-componet .btn-sub{
-  margin-bottom: 24px;
+.messagebox .btn-sub.btn-cancel{
+  background: #fff;
+  color: #33C8DF;
 }
+.messagebox .btn-sub:hover{
+  box-shadow: 0px 0px 3px 0px #33C8DF;
+}
+.messagebox .dialog-content .btns{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+
 .common-message .dialog-box .custom-tel{
   font-size: 12px;
 color: #666666;
@@ -1245,14 +719,14 @@ text-align: center;
 .messagebox .btn-sub.sub{
   position: absolute;
   z-index: 9;
-  right: 10px;
-  bottom: 10px;
+  right: 5px;
+  bottom: 5px;
 }
 .messagebox .meslist{
   position: absolute;
   width: 100%;
-  top: 50px;
-  bottom:100px;
+  top: 44px;
+  bottom:130px;
   overflow-y: auto;
   background: #fff;
 }
@@ -1333,23 +807,6 @@ display: none;
   position: relative;
   min-height: 22px;
 }
-.messagebox .meslist .item .meslog p{
-  font-size: 13px;
-  line-height: 18px;
-color: #999999;
-}
-.messagebox .meslist .item .meslog .logtitle{
-  font-size: 15px;
-color: #333333;
-line-height: 21px;
-margin-bottom: 5px;
-}
-.messagebox .meslist .item .meslog .pointer{
-  padding: 7px 0;
-  margin-top: 7px;
-  border-top: 1px solid #E7E7E7;
-  color:#666;
-}
 .messagebox .meslist .item .mes.filebox{
   padding: 40px 20px 20px 20px;
   text-align: center;
@@ -1380,7 +837,7 @@ margin: 0 auto;
   justify-content: center;
 }
 .messagebox .meslist .item.system .systembox p{
-  background: #E7E7E7;
+  background: #f5f5f5;
 border-radius: 4px;
 border-radius: 4px;
 padding: 5px 6px;
@@ -1417,6 +874,11 @@ font-size: 12px;
   right: -12px;
   left: inherit;
   top: 10px;
+}
+
+/*再次咨询按钮*/
+.hidemask .btn-sub{
+  margin-top: 30px;
 }
 
 </style>

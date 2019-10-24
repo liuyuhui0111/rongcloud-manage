@@ -3,29 +3,46 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import getters from './getters'
 import {getTokenFn,setTokenFn} from '@/assets/utils/util'
+import rongcloud from './modules/rongcloud';
 
-const modules = {
-}
-
+console.log(rongcloud)
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
 	state: {
-		token: getTokenFn() || '',		//token
+		token:getTokenFn() || '',		//token
 		imtoken:'',		//imtoken 聊天token
 		userId:'',
-		curTargetId:'',
 		curUserData:{},		//当前用户信息存储  用户id  用户名称 用户账户 imid等
 		curTargetUserData:{},		//当前聊天对象信息存储  用户id  用户名称 用户账户 imid等
 		curChangeUserData:{},		//当前转单对象信息存储  用户id  用户名称 用户账户 imid等
-		meslist:{},		//聊天信息
-		userlist:[],		//用户咨询单列表
-		vuexShowMessage:false,		//全局控制是否显示聊天框
+		mesListData:[],		//{id:xx,code:xx}	聊天记录对象 id:咨询单id code:咨询单code  user:当前用户信息  target:目标对象 list:聊天列表 group:群组信息// 
 	},
-	getters: {},
 	actions: {},
 	mutations: {
+		 setcurTargetUserData(state,data) {
+	  	// 设置token  同步到cookie 有效期默认7天
+	  	//如果token不存在 默认清空token
+	  	console.log('设置咨询单id',data)
+	    state.curTargetUserData = JSON.parse(JSON.stringify(data));
+	  },
+	  setcurChangeUserData(state,data) {
+	  	// 设置token  同步到cookie 有效期默认7天
+	  	//如果token不存在 默认清空token
+	    state.curChangeUserData = JSON.parse(JSON.stringify(data));
+	  },
+	  setcurUserData(state,data) {
+	  	// 设置token  同步到cookie 有效期默认7天
+	  	//如果token不存在 默认清空token
+	    state.curUserData = JSON.parse(JSON.stringify(data));
+	  },
+	  setmesListData(state,data) {
+	  	// 设置token  同步到cookie 有效期默认7天
+	  	//如果token不存在 默认清空token
+	    state.mesListData = data;
+	    
+	  },
 		setImToken(state,token) {
 	  	// 设置token  同步到cookie 有效期默认7天
 	  	//如果token不存在 默认清空token
@@ -37,56 +54,11 @@ export default new Vuex.Store({
 	    state.imtoken = token;
 	    
 	  },
-	  setvuexShowMessage(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	    state.vuexShowMessage = data;
-	  },
-	  setuserlist(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	    state.userlist = JSON.parse(JSON.stringify(data));
-	  },
-	  setmeslist(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	  	console.log(data);
-	    state.meslist = JSON.parse(JSON.stringify(data));
-	  },
-	  setcurTargetUserData(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	    state.curTargetUserData = JSON.parse(JSON.stringify(data));
-	  },
-	  setcurChangeUserData(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	    state.curChangeUserData = JSON.parse(JSON.stringify(data));
-	  },
-	  setcurUserData(state,data) {
-	  	// 设置token  同步到cookie 有效期默认7天
-	  	//如果token不存在 默认清空token
-	  	if(!data){
-	  		window.sessionStorage.removeItem('curUserData')
-	  	}else{
-				window.sessionStorage.setItem('curUserData', JSON.stringify(data));
-	  	}
-	    state.curUserData = JSON.parse(JSON.stringify(data));
-	  },
 	  setToken(state,token) {
 	  	// 设置token  同步到cookie 有效期默认7天
 	  	//如果token不存在 默认清空token
 	  	setTokenFn(token);
 	    state.token = token;
-	  },
-	  setCurTargetId(state,id) {
-	  	// 设置当前聊天的id
-	    state.curTargetId = id;
-	    if(!id){
-	  		window.sessionStorage.removeItem('curTargetId')
-	  	}else{
-	  		window.sessionStorage.setItem('curTargetId',id);
-	  	}
 	  },
 	  setUserId(state,userId) {
 	  	state.userId = userId;
@@ -96,8 +68,10 @@ export default new Vuex.Store({
 	  		window.sessionStorage.setItem('userId',userId);
 	  	}
 	  	
-		},
+	  },
 	},
-  modules,
+  modules:{
+  	rongcloud,
+  },
   getters
 });
