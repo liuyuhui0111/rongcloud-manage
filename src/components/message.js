@@ -136,6 +136,14 @@ export default {
       return val > 99 ? '99+' : val;
     },
   },
+  computed: {
+    isEndmes() {
+      // 当前咨询单是否结束
+      return (this.userlist[this.curMessageIndex].exchange === 1
+        && this.userlist[this.curMessageIndex].fromExpertId === this.curUserData.id)
+        || this.userlist[this.curMessageIndex].status === 2;
+    },
+  },
   methods: {
     async init(params) {
       this.userInfo = {
@@ -540,7 +548,7 @@ export default {
       // 快捷消息
       this.startSendMes(2, item.name);
       // 埋点
-      this.yszj_quickResponse({ replyContent: item.name });
+      this.yszj_quickResponse({ replyContent: item.code });
       this.isShowquickmesBox = false;
     },
     async startSendMes(type, mes) {

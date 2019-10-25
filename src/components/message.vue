@@ -46,12 +46,7 @@
       <div class="userlist">
         <div @keyup.enter="SearchPageFn" class="search-box">
           <div class="inp">
-            <input
-              type="text"
-              @focus="searchFocus()"
-              @blur="searchBlur()"
-              v-model="searchVal"
-            />
+            <input type="text" @focus="searchFocus()" @blur="searchBlur()" v-model="searchVal" />
             <span
               v-show="searchVal && isFocusSearch"
               @click.stop="searchVal = ''"
@@ -82,9 +77,9 @@
           >
             <div class="imgbox">
               <span
-                  v-if="item.userMsgCount"
-                  class="userMsgCount"
-                >{{item.userMsgCount | userMsgFilters}}</span>
+                v-if="item.userMsgCount"
+                class="userMsgCount"
+              >{{item.userMsgCount | userMsgFilters}}</span>
               <div :class="{offlineGray: item.status==2}">
                 <img :src="item.icon" alt />
                 <img
@@ -122,8 +117,6 @@
             && item.fromExpertId == curUserData.id"
                   class="iconfont iconzixunzhong"
                 ></span>
-
-
               </p>
             </div>
           </div>
@@ -146,10 +139,8 @@
             <el-popover placement="bottom" trigger="click">
               <!-- 个人信息 -->
               <div class="useraccount">
-                <span v-if="curTargetUserData.userType == 'P'"
-                class="title">个人账户</span>
-                <span v-if="curTargetUserData.userType == 'C'"
-                class="title">企业账户</span>
+                <span v-if="curTargetUserData.userType == 'P'" class="title">个人账户</span>
+                <span v-if="curTargetUserData.userType == 'C'" class="title">企业账户</span>
                 <p v-if="curTargetUserData.userType == 'C'"
                 >所属企业：{{curTargetUserData.userCompany}}</p>
                 <p v-if="curTargetUserData.userType == 'C'"
@@ -161,8 +152,11 @@
                 >所属地区：{{curTargetUserData.companyLocation}}</p>
               </div>
               <div slot="reference" class="title">
-                <span class="icon"></span>
 
+                <span v-if="curTargetUserData.userType == 'C'"
+                class="iconuser"
+                :class="{on:userlist[curMessageIndex].status!=2}"></span>
+                <span v-else class="icon" :class="{on:userlist[curMessageIndex].status!=2}"></span>
                 <span class="name">{{encryptionFn(curTargetUserData.name)}}</span>
               </div>
             </el-popover>
@@ -175,8 +169,9 @@
             </div>
           </template>
           <div class="time">已咨询{{getTimeFn(curTargetUserData.duration,'1')}}</div>
-          <div class="btns">
-            <span @click="hideMessage" class="close">-</span>
+          <div  @click="hideMessage()" class="btns">
+            <!--
+            <span @click="hideMessage" class="close">-</span>-->
           </div>
         </div>
         <!-- 聊天展示区域 -->
@@ -342,7 +337,10 @@
               <p>已转单给{{userlist[curMessageIndex].consultExpert.name}}</p>
             </div>
           </div>
-          <div class="btns">
+          <div class="btns" :class="{gray:(userlist[curMessageIndex].exchange == 1 &&
+        userlist[curMessageIndex].fromExpertId == curUserData.id)
+        || userlist[curMessageIndex].status==2}">
+            <div class="fl">
             <span
               @click.stop="isShowquickmesBox=false;
           closeCofirmBox=false;
@@ -358,56 +356,37 @@
             <label for="file">
               <span title="上传文件" class="iconfont iconfasongwenjian"></span>
             </label>
-
+            </div>
             <!--     <span @click="upload('img')" class="iconfont iconfasongtupian"></span>
 
 
             <span @click="upload('file')" class="iconfont iconfasongwenjian"></span>-->
-
-            <!-- 快捷回复 -->
-
-            <span
-              title="快捷回复"
-              @click.stop="isShowEmoji=false;
-          closeCofirmBox=false;
-          isShowquickmesBox = !isShowquickmesBox"
-              class="iconfont iconkuaijiehuifu"
-            ></span>
-
-            <!-- 问题分类 -->
-            <span
-              @click="showQuestionFn()"
-              title="问题分类"
-              :class="{on:userlist[curMessageIndex].status==2
-          && userlist[curMessageIndex].qtype == '0'}"
-              class="iconfont iconwentifenlei"
-            ></span>
-
+          <div class="fr">
             <!-- 转单 -->
-            <span @click="changeExpert()" title="转单" class="iconfont iconzhuandan1"></span>
-
-            <!-- 结束 -->
-
-            <div class="re">
-              <div v-show="closeCofirmBox" class="close-confirm-box dialog-box-base">
-                <div class="box">
-                  <p>询问用户是否可以结束咨询？</p>
-                  <div class="btnbox">
-                    <span @click.stop="closeCofirmBox=false;" class="cancel">取消</span>
-                    <span @click.stop="proposeEndConsultFn()" class="sub">确定</span>
-                  </div>
-                </div>
-              </div>
-              <span
-                @click.stop="isShowEmoji=false;
-          isShowquickmesBox=false;
-          closeCofirmBox=!closeCofirmBox"
-                title="结束咨询"
-                class="iconfont iconjieshuzixun"
-              ></span>
+            <div @click="changeExpert()" class="iconbox">
+              <span class="iconfont iconzhuandan1"></span>转单
             </div>
+            <!-- 快捷回复 -->
+            <div @click.stop="isShowEmoji=false;
+            closeCofirmBox=false;
+            isShowquickmesBox = !isShowquickmesBox"
+            class="iconbox">
+              <span class="iconfont iconkuaijiehuifu"
+              ></span>快捷回复
+            </div>
+            <!-- 问题分类 -->
+            <div @click="showQuestionFn()" class="iconbox">
+              <span
+                @click="showQuestionFn()"
+                :class="{on:userlist[curMessageIndex].status==2
+            && userlist[curMessageIndex].qtype == '0'}"
+                class="iconfont iconwentifenlei"
+              ></span>问题分类
+            </div>
+
           </div>
-          <div class="inp">
+          </div>
+          <div class="inp" >
             <div v-if="isShowEmoji && emojiList.length>0" @click.stop class="emojibox">
               <div
                 class="item"
@@ -430,7 +409,9 @@
             <!-- <textarea v-model="mesData" placeholder="说点什么吧"></textarea> -->
           </div>
         </div>
-        <div class="btn-sub sub" @click="startSendMes(1)">发送</div>
+        <div class="btn-sub sub"
+          :class="{gray:isEndmes}"
+        @click="startSendMes(1)">发送</div>
 
         <!-- 结束会话 -->
 
@@ -463,13 +444,26 @@
             <span class="name">暂无咨询消息</span>
           </div>
           <div class="time"></div>
-          <div class="btns">
-            <span @click="hideMessage" class="close">-</span>
-          </div>
+          <div class="btns"></div>
         </div>
       </div>
     </template>
+    <!-- 结束咨询按钮 -->
 
+    <div v-show="closeCofirmBox" class="close-confirm-box">
+      <p>询问用户是否可以结束咨询？</p>
+      <div class="btnbox">
+        <span @click="closeCofirmBox=false" class="cancel">取消</span>
+        <span @click="proposeEndConsultFn()" class="sub">确定</span>
+      </div>
+    </div>
+    <span
+      v-if="(userlist[curMessageIndex].exchange == 1 &&
+        userlist[curMessageIndex].fromExpertId == curUserData.id)
+        || userlist[curMessageIndex].status==2"
+      class="icon-close off"
+    >结束咨询</span>
+    <span v-else @click.stop="closeCofirmBox=true;" class="icon-close">结束咨询</span>
     <!-- 问题分类弹窗 -->
     <template v-if="questionStr && isShowQuestion">
       <question
@@ -544,6 +538,7 @@ export default message;
 }
 .common-message .inp .el-textarea__inner {
   border: none;
+  background: none;
 }
 .common-message .closeCofirmBox {
   position: absolute;
@@ -615,6 +610,10 @@ export default message;
   padding: 0 0 0 0px;
 }
 
+
+</style>
+<style scoped>
+.common-message .messagebox .headerbox .title .iconuser,
 .common-message .messagebox .headerbox .title .icon {
   width: 15px;
   height: 15px;
@@ -626,8 +625,15 @@ export default message;
   cursor: pointer;
   display: block;
 }
-</style>
-<style scoped>
+.common-message .messagebox .headerbox .title .iconuser{
+  background-image: url("./img/icon-comp.png");
+}
+.common-message .messagebox .headerbox .title .iconuser.on{
+  background-image: url("./img/icon-comp-on.png");
+}
+.common-message .messagebox .headerbox .title .icon.on{
+  background-image: url("./img/icon-user-on.png");
+}
 /* 左侧个人信息 */
 .leftuser {
   display: block;
@@ -686,7 +692,7 @@ a.noline {
   display: block;
   width: 85%;
   margin: 12px auto;
-  background: #ededed;
+  background: #cceef4;
   border-radius: 4px;
   font-size: 12px;
   color: #333333;
@@ -725,8 +731,8 @@ a.noline {
   width: 360px;
   height: 146px;
   overflow-y: auto;
-  bottom: 101px;
-  left: 30px;
+  bottom: 131px;
+  right: 30px;
   background: #f9f9f9;
   border: 1px solid #d9d9d9;
   border-radius: 4px 4px 0 0;
@@ -907,7 +913,7 @@ a.noline {
   color: #333;
   font-weight: 400;
 }
-.userlistbox .userlist .item .intro.offlineGray .name{
+.userlistbox .userlist .item .intro.offlineGray .name {
   color: #999;
 }
 .userlistbox .userlist .item .intro .time {
@@ -1142,7 +1148,27 @@ a.noline {
 .re {
   position: relative;
 }
-
+/* 结束咨询 */
+.icon-close {
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  width: 80px;
+  height: 27px;
+  background: #fd8606;
+  border-radius: 30px 0 0 30px;
+  right: 0;
+  top: 74px;
+  z-index: 118;
+  color: #fff;
+  text-align: center;
+  line-height: 27px;
+  font-size: 12px;
+  font-weight: normal;
+}
+.icon-close.off{
+  background: #d5d5d5;
+}
 .close-confirm-box {
   width: 204px;
   height: 98px;
@@ -1151,9 +1177,20 @@ a.noline {
   font-size: 12px;
   color: #333;
   position: absolute;
-  left: -90px;
-  bottom: 35px;
   background: #fff;
+  right: 90px;
+  top: 35px;
+  z-index: 111;
+}
+.close-confirm-box:after {
+  content: "";
+  position: absolute;
+  border-right: 6px solid transparent;
+  border-left: 10px solid #fff;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  right: -13px;
+  top: 45px;
 }
 .close-confirm-box p {
   padding-top: 24px;
@@ -1181,6 +1218,12 @@ a.noline {
   background: #fff;
   margin-right: 20px;
 }
+.messagebox .sendbox .btns .fr,
+.messagebox .sendbox .btns .fl{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .messagebox .sendbox .btns .close-confirm-box span:hover,
 .messagebox .sendbox .btns .close-confirm-box span {
   font-size: 12px;
@@ -1188,6 +1231,15 @@ a.noline {
 }
 .messagebox .sendbox .btns .close-confirm-box span.sub:hover {
   color: #fff;
+}
+.iconbox{
+  display: flex;
+    align-items: center;
+    height: 24px;
+    background: #fff;
+    margin-left: 6px;
+    padding: 0 9px 0 0;
+    cursor: pointer;
 }
 .close-confirm-box .btnbox span.sub {
   background: #33c8df;
@@ -1208,26 +1260,47 @@ a.noline {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: #ffffff;
-  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.15);
+  background: #fbfbfb;
   font-size: 14px;
   color: #333333;
   padding: 0 16px;
   font-weight: bold;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid #e7e7e7;
   box-sizing: border-box;
 }
 .messagebox .headerbox .btns {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  width: 44px;
+  height: 44px;
   position: absolute;
-  right: 16px;
+  right: 0;
+  top: 0;
+  overflow: hidden;
+  cursor: pointer;
 }
-.dialog-header .close,
-.messagebox .headerbox .btns span {
+.messagebox .headerbox .btns:after {
+  content: "";
+  display: block;
+  width: 70px;
+  height: 70px;
+  background: #67cbdb;
+  position: absolute;
+  z-index: 1;
+  transform: rotate(45deg);
+  top: -42px;
+  right: -35px;
+}
+.messagebox .headerbox .btns:before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  width: 12px;
+  height: 2px;
+  background: #fff;
+  right: 10px;
+  top: 10px;
+}
+
+.dialog-header .close {
   width: 16px;
   height: 16px;
   line-height: 14px;
@@ -1251,15 +1324,17 @@ a.noline {
   font-weight: normal;
   display: flex;
   align-items: center;
+  margin-left: 40px;
 }
 
 .messagebox .sendbox {
-  height: 100px;
+  height: 130px;
   bottom: 0;
   right: 0;
   position: absolute;
   width: 100%;
-  border-top: 1px solid #ccc;
+  box-shadow: 0 -1px 0 0 #e7e7e7;
+  background: #f3f3f3;
 }
 .messagebox .sendbox .inp {
   position: relative;
@@ -1267,6 +1342,9 @@ a.noline {
 .messagebox .sendbox .btns {
   height: 30px;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
 }
 .messagebox .sendbox .btns span {
   display: block;
@@ -1281,14 +1359,23 @@ a.noline {
 .messagebox .sendbox .btns span.iconzhuandan1 {
   font-size: 17px;
 }
-.messagebox .sendbox .btns span.iconwentifenlei,
-.messagebox .sendbox .btns span.iconwentifenlei.on {
-  z-index: 111;
-}
-.messagebox .sendbox .btns span:hover {
+.messagebox .sendbox .btns .iconbiaoqing:hover,
+.messagebox .sendbox .btns .iconfasongtupian:hover,
+.messagebox .sendbox .btns .iconfasongwenjian:hover {
   color: #33c8df;
   font-size: 17px;
 }
+.messagebox .sendbox .btns span.iconwentifenlei{
+  color:rgb(44,204,205);
+}
+.messagebox .sendbox .btns span.iconkuaijiehuifu{
+  color: rgb(241,185,101);
+}
+
+.messagebox .sendbox .btns span.iconzhuandan1{
+  color: rgb(53,167,254);;
+}
+
 .messagebox textarea {
   width: 100%;
   border: none;
@@ -1335,9 +1422,9 @@ a.noline {
   position: absolute;
   width: 100%;
   top: 50px;
-  bottom: 100px;
+  bottom: 130px;
   overflow-y: auto;
-  background: #fff;
+  background: #f3f3f3;
 }
 .messagebox .meslist .item {
   overflow: hidden;
@@ -1410,7 +1497,7 @@ a.noline {
   padding: 5px 15px;
   max-width: 100%;
   color: #333;
-  background: #f5f5f5;
+  background: #fff;
   border-radius: 4px;
   word-break: break-all;
   position: relative;
@@ -1472,7 +1559,7 @@ a.noline {
 }
 
 .messagebox .meslist .item.on .mes {
-  background-color: #c5f7ff;
+  background-color: #a6ebf6;
   border-color: #fb683c;
 }
 
@@ -1483,7 +1570,7 @@ a.noline {
   position: absolute;
   top: 2px;
   border-left: 6px solid transparent;
-  border-right: 10px solid #f5f5f5;
+  border-right: 10px solid #fff;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   right: inherit;
@@ -1493,7 +1580,7 @@ a.noline {
 
 .messagebox .meslist .item.on .mes span.after {
   border-right: 6px solid transparent;
-  border-left: 10px solid #c5f7ff;
+  border-left: 10px solid #a6ebf6;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   right: -12px;

@@ -73,7 +73,6 @@ body .iconfasongwenjian:hover:before,
 .iconfasongwenjian-xuanzhong:before {
   content: "\e64c";
 }
-body .iconjieshuzixun:hover:before,
 .iconjieshuzixun-xuanzhong:before {
   content: "\e64d";
 }
@@ -85,7 +84,6 @@ body .iconjieshuzixun:hover:before,
 .iconyizhuandan:before {
   content: "\e654";
 }
-body .iconzhuandan1:hover:before,
 .iconzhuandan-xuanzhong:before {
   content: "\e64e";
 }
@@ -93,11 +91,9 @@ body .iconzhuandan1:hover:before,
 .iconzhuandan1:before {
   content: "\e64f";
 }
-body .iconkuaijiehuifu:hover:before,
 .iconkuaijiehuifu-xuanzhong:before {
   content: "\e650";
 }
-body .iconwentifenlei:hover:before,
 .iconwentifenlei-xuanzhong:before {
   content: "\e652";
 }
